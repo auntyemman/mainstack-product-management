@@ -1,6 +1,6 @@
 import { QueryOptions } from 'mongoose';
-import { APIError, NotFoundError } from '../../common/utils/custom_error';
-import { PaginationResult } from '../../common/utils/pagination';
+import { APIError, NotFoundError } from '../../shared/utils/custom_error';
+import { PaginationResult } from '../../shared/utils/pagination';
 import { IInventory } from './inventory.model';
 import { InventoryRepository } from './inventory.repository';
 

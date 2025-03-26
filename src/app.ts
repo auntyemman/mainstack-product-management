@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import 'reflect-metadata';
 import cookieParser from 'cookie-parser';
-import { errorHandler } from './common/middlewares/error_handler';
+import { errorHandler } from './shared/middlewares/error_handler';
 import { router } from '.';
 
 /**
@@ -27,7 +27,7 @@ export function createApp(): Application {
   );
   app.use('/api/v1', router);
   app.get('/', (req: Request, res: Response) => {
-    return res.status(200).send('Hello, Mainstack!');
+    return res.status(200).send('Hello, Mainstack!.');
   });
   app.use(errorHandler);
 

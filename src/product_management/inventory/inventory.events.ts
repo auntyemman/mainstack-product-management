@@ -1,4 +1,4 @@
-import { emitterService } from '../../common/configs/event_emitter';
+import { emitterService } from '../../shared/configs/event_emitter';
 import { InventoryService } from './inventory.service';
 
 // Event listeners for inventory service

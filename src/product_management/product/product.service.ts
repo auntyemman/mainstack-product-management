@@ -1,8 +1,8 @@
 import { ProductRepository } from './product.repository';
 import { IProduct } from './product.model';
-import { APIError, BadRequestError, NotFoundError } from '../../common/utils/custom_error';
+import { APIError, BadRequestError, NotFoundError } from '../../shared/utils/custom_error';
 import { QueryOptions } from 'mongoose';
-import { PaginationResult } from '../../common/utils/pagination';
+import { PaginationResult } from '../../shared/utils/pagination';
 
 export class ProductService {
   private readonly productRepository: ProductRepository;

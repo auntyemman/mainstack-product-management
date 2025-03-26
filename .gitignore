@@ -4,3 +4,4 @@ dist
 error.log
 coverage
 data
+gitignore

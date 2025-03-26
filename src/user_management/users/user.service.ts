@@ -1,7 +1,7 @@
 import { IUser } from './user.model';
-import { hashPassword, comparePasswords } from '../../common/utils/password_hash';
+import { hashPassword, comparePasswords } from '../../shared/utils/password_hash';
 import { UserRepository } from './user.repository';
-import { APIError, BadRequestError, NotFoundError } from '../../common/utils/custom_error';
+import { APIError, BadRequestError, NotFoundError } from '../../shared/utils/custom_error';
 import crypto from 'crypto';
 
 // User Service class for user management

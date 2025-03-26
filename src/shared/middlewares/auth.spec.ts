@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import supertest from 'supertest';
 import { authUser } from './auth';
-import { AuthenticationService } from '../../user/authentication/authentication.service';
+import { AuthenticationService } from '../../user_management/authentication/authentication.service';
 import { NotAuthorizedError } from '../utils/custom_error';
 
 // Mock AuthenticationService.verifyJWT

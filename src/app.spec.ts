@@ -12,7 +12,7 @@ describe('App', () => {
   it('should respond with 200 on GET /', async () => {
     const response = await request.get('/');
     expect(response.status).toBe(200);
-    expect(response.text).toBe('Hello, Mainstack!');
+    expect(response.text).toBe('Hello, Mainstack!.');
   });
 
   it('should respond with a 404 for unknown routes', async () => {

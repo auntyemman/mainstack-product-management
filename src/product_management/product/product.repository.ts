@@ -1,7 +1,7 @@
 import { QueryOptions } from 'mongoose';
-import { BaseRepository } from '../../common/configs/base.repository';
+import { BaseRepository } from '../../shared/configs/base.repository';
 import { IProduct, Product } from './product.model';
-import { paginate, PaginationResult } from '../../common/utils/pagination';
+import { paginate, PaginationResult } from '../../shared/utils/pagination';
 
 export class ProductRepository extends BaseRepository<IProduct> {
   private readonly productModel;

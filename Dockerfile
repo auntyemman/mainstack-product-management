@@ -5,11 +5,11 @@ WORKDIR /src/app
 
 COPY package.json ./
 
-RUN yarn install
+RUN npm install
 
 COPY . .
 
-RUN yarn build
+RUN npm run build
 
 # Stage
 FROM node:20-alpine
@@ -24,4 +24,4 @@ COPY --from=build /src/app/.env ./.env
 
 EXPOSE 5500
 
-CMD ["yarn", "start"]
+CMD ["npm","run", "start:dev"]

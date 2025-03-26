@@ -1,8 +1,8 @@
 import { InventoryService } from './inventory.service';
 import { InventoryRepository } from './inventory.repository';
 import { IInventory } from './inventory.model';
-import { APIError, NotFoundError } from '../../common/utils/custom_error';
-import { PaginationResult } from '../../common/utils/pagination';
+import { APIError, NotFoundError } from '../../shared/utils/custom_error';
+import { PaginationResult } from '../../shared/utils/pagination';
 
 // Mock InventoryRepository
 jest.mock('./inventory.repository');

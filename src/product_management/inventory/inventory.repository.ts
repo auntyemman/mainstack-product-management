@@ -1,6 +1,6 @@
 import { QueryOptions } from 'mongoose';
-import { BaseRepository } from '../../common/configs/base.repository';
-import { paginate, PaginationResult } from '../../common/utils/pagination';
+import { BaseRepository } from '../../shared/configs/base.repository';
+import { paginate, PaginationResult } from '../../shared/utils/pagination';
 import { IInventory, Inventory } from './inventory.model';
 
 // Inventory Repository class

@@ -1,7 +1,7 @@
 # Mainstack APIs
 
 ## Features
-- User authentication and user management
+- User management
 - Product Management
 - Inventory management
 

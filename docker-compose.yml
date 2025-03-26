@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5500:5500"
-    restart: unless-stopped
+    restart: always
     environment:
       - NODE_ENV=production
       - DATABASE_URI=${DATABASE_URI}

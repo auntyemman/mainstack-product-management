@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { bindMethods } from '../../common/utils/bind_method';
+import { bindMethods } from '../../shared/utils/bind_method';
 import { InventoryController } from './inventory.controller';
-import { authUser } from '../../common/middlewares/auth';
-import { adminRBAC } from '../../common/middlewares/admin.RBAC';
+import { authUser } from '../../shared/middlewares/auth';
+import { adminRBAC } from '../../shared/middlewares/admin.RBAC';
 
 export const inventory: Router = Router();
 // Bind methods to the controller

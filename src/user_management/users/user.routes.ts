@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { UserController } from './user.controller';
-import { authUser } from '../../common/middlewares/auth';
-import { bindMethods } from '../../common/utils/bind_method';
+import { authUser } from '../../shared/middlewares/auth';
+import { bindMethods } from '../../shared/utils/bind_method';
 
 export const user: Router = Router();
 const userCont = bindMethods(new UserController());

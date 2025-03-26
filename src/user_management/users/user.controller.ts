@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 
 import { UserService } from './user.service';
-import { validateRequest } from '../../common/utils/request_validator';
+import { validateRequest } from '../../shared/utils/request_validator';
 import { SignUpDTO, SignInDTO, UpdateDTO, UserRole, CreateAdminDTO } from './user.dto';
-import { AuthenticationService } from '../../user/authentication/authentication.service';
-import { APIError } from '../../common/utils/custom_error';
+import { AuthenticationService } from '../authentication/authentication.service';
+import { APIError } from '../../shared/utils/custom_error';
 import crypto from 'crypto';
 
 export class UserController {

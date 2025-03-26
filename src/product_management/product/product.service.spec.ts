@@ -1,8 +1,8 @@
 import { ProductService } from './product.service';
 import { ProductRepository } from './product.repository';
 import { IProduct } from './product.model';
-import { BadRequestError, APIError, NotFoundError } from '../../common/utils/custom_error';
-import { PaginationResult } from '../../common/utils/pagination';
+import { BadRequestError, APIError, NotFoundError } from '../../shared/utils/custom_error';
+import { PaginationResult } from '../../shared/utils/pagination';
 
 // Mock ProductRepository
 jest.mock('./product.repository');

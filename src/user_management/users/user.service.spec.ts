@@ -1,7 +1,7 @@
 import { UserService } from './user.service';
 import { UserRepository } from './user.repository';
-import { hashPassword, comparePasswords } from '../../common/utils/password_hash';
-import { BadRequestError, NotFoundError, APIError } from '../../common/utils/custom_error';
+import { hashPassword, comparePasswords } from '../../shared/utils/password_hash';
+import { BadRequestError, NotFoundError, APIError } from '../../shared/utils/custom_error';
 import { IUser } from './user.model';
 
 jest.mock('./user.repository');

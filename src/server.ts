@@ -1,8 +1,8 @@
 import { createApp } from './app';
-import { databaseConnection } from './common/configs/database';
-import { logger } from './common/configs/logger';
-import { inventoryEventListeners } from './product_store/inventory/inventory.events';
-import { PORT } from './common/configs';
+import { databaseConnection } from './shared/configs/database';
+import { logger } from './shared/configs/logger';
+import { inventoryEventListeners } from './product_management/inventory/inventory.events';
+import { PORT } from './shared/configs';
 
 export class Server {
   private readonly app;
@@ -18,7 +18,7 @@ export class Server {
         logger.info(`app is running on port ${PORT}`);
       });
       inventoryEventListeners;
-      logger.info('Server started successfully');
+      logger.info('Server started successfully.');
     } catch (error) {
       logger.error(error);
       process.exit(1);

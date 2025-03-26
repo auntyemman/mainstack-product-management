@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { ProductController } from './product.controller';
-import { authUser } from '../../common/middlewares/auth';
-import { adminRBAC } from '../../common/middlewares/admin.RBAC';
-import { bindMethods } from '../../common/utils/bind_method';
+import { authUser } from '../../shared/middlewares/auth';
+import { adminRBAC } from '../../shared/middlewares/admin.RBAC';
+import { bindMethods } from '../../shared/utils/bind_method';
 
 export const product: Router = Router();
 const productCont = bindMethods(new ProductController());

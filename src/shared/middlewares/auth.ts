@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthenticationService } from '../../user/authentication/authentication.service';
+import { AuthenticationService } from '../../user_management/authentication/authentication.service';
 import { BadRequestError, NotAuthorizedError } from '../utils/custom_error';
 
 export const authUser = async (req: Request, res: Response, next: NextFunction) => {

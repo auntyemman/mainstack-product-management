@@ -1,10 +1,10 @@
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
-import { AuthenticationService } from '../../user/authentication/authentication.service';
-import { validateRequest } from '../../common/utils/request_validator';
+import { AuthenticationService } from '../authentication/authentication.service';
+import { validateRequest } from '../../shared/utils/request_validator';
 import { SignUpDTO, SignInDTO, CreateAdminDTO, UpdateDTO } from './user.dto';
 import { Request, Response, NextFunction } from 'express';
-import { APIError } from '../../common/utils/custom_error';
+import { APIError } from '../../shared/utils/custom_error';
 import { IUser } from './user.model';
 
 jest.mock('./user.service');

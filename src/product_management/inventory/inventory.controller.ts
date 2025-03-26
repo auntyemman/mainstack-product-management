@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { InventoryService } from './inventory.service';
-import { validateRequest } from '../../common/utils/request_validator';
+import { validateRequest } from '../../shared/utils/request_validator';
 import { CreateInventoryDTO, UpdateInventoryDTO, UpdateInventoryQuntityDTO } from './inventory.dto';
 
 // Controller class for inventory service

@@ -4,3 +4,4 @@ test
 coverage
 dist
 data
+.dockerignore

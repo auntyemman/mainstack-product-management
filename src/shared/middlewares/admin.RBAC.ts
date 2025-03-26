@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ForbiddenError } from '../utils/custom_error';
-import { UserRole } from '../../user/user_management/user.dto';
+import { UserRole } from '../../user_management/users/user.dto';
 
 /**
  * A middleware that checks if the current user is an admin.

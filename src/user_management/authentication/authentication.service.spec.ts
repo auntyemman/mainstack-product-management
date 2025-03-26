@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { AuthenticationService } from './authentication.service';
-import { JWT_SECRET } from '../../common/configs';
-import { BadRequestError } from '../../common/utils/custom_error';
+import { JWT_SECRET } from '../../shared/configs';
+import { BadRequestError } from '../../shared/utils/custom_error';
 import { JWT_Expiration } from './authentication.dto';
 
 // Mock the JWT module
