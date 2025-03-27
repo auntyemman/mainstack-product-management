@@ -1,6 +1,6 @@
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
-import { AuthenticationService } from '../authentication/authentication.service';
+import { AuthenticationService } from '../auth/auth.service';
 import { validateRequest } from '../../shared/utils/request_validator';
 import { SignUpDTO, SignInDTO, CreateAdminDTO, UpdateDTO } from './user.dto';
 import { Request, Response, NextFunction } from 'express';

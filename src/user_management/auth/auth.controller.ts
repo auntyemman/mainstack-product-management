@@ -1,13 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 
-import { UserService } from './user.service';
+import { UserService } from '../users/user.service';
 import { validateRequest } from '../../shared/utils/request_validator';
-import { SignUpDTO, SignInDTO, UpdateDTO, UserRole, CreateAdminDTO } from './user.dto';
+import { SignUpDTO, SignInDTO, UpdateDTO, UserRole, CreateAdminDTO } from '../users/user.dto';
 import { AuthenticationService } from '../auth/auth.service';
 import { APIError } from '../../shared/utils/custom_error';
 import crypto from 'crypto';
+import { successResponse } from '../../shared/utils/api_response';
+import { ApiResponse } from '../../shared/types/api_response.type';
+import { IUser } from '../users/user.model';
 
-export class UserController {
+export class AuthController {
   private readonly userService;
   private readonly authService;
   constructor() {
@@ -15,22 +18,16 @@ export class UserController {
     this.authService = new AuthenticationService();
   }
 
-  async signUp(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
+  async signUp(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const validated = await validateRequest(SignUpDTO, req.body);
       const user = await this.userService.createUser(validated);
       if (!user) {
         throw new APIError('Failed to create user');
       }
-      const { id, email } = user;
-      return res.status(201).json({
-        status: 'success',
-        message: `Registration successful`,
-        data: {
-          id: id,
-          email: email,
-        },
-      });
+      // testable typed response 
+      const response = successResponse(201, 'User registered successfully', user);
+      return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
@@ -119,100 +116,6 @@ export class UserController {
       return res.status(200).json({
         status: 'success',
         message: 'Logged out successfully',
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-  // async generateKeys(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-  //   try {
-  //     const { _id } = res.locals.user.user;
-  //     const keys = await this.userService.generateUserKeys(_id);
-  //     if (!keys) {
-  //       throw new APIError('could not generate keys');
-  //     }
-  //     const { publicKey, hashedPrivateKey } = keys;
-  //     return res.status(201).json({
-  //       status: 'success',
-  //       message: 'Key pair generated successfully.',
-  //       data: {
-  //         publicKey,
-  //         hashedPrivateKey, // Be cautious about sending back the private key; consider encrypting it first.
-  //       },
-  //     });
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // }
-
-  // async getkey(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-  //   try {
-  //     const { _id } = res.locals.user.user;
-  //     const publicKey = await this.userService.deleteKeys(_id);
-  //     return res.status(200).json({
-  //       status: 'success',
-  //       data: {
-  //         publicKey,
-  //       },
-  //     })
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // }
-
-  // async deletekey(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-  //   try {
-  //     const { _id } = res.locals.user.user;
-  //     const user = await this.userService.deleteKeys(_id);
-  //     return res.status(200).json({
-  //       status: 'success',
-  //       message: 'Key pair deleted successfully.',
-  //       data: {
-  //         user,
-  //       },
-  //     })
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // }
-
-  async getUser(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-    try {
-      const id = req.params.id;
-      const user = await this.userService.getUser(id);
-      return res.status(200).json({
-        status: 'success',
-        message: 'User fetched successfully',
-        data: user,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async getProfile(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-    const { _id } = res.locals.user.user;
-    try {
-      const user = await this.userService.getUser(_id);
-      return res.status(200).json({
-        status: 'success',
-        message: 'profile in session fetched successfully',
-        data: user,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async updateProfile(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-    const { _id } = res.locals.user.user;
-    try {
-      const validated = await validateRequest(UpdateDTO, req.body);
-      const updatedUser = await this.userService.updateUser(_id, validated);
-      return res.status(200).json({
-        status: 'success',
-        message: 'user updated succesfully',
-        data: updatedUser,
       });
     } catch (error) {
       next(error);

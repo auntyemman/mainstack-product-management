@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
-import { AuthenticationService } from './authentication.service';
+import { AuthenticationService } from './auth.service';
 import { JWT_SECRET } from '../../shared/configs';
 import { BadRequestError } from '../../shared/utils/custom_error';
-import { JWT_Expiration } from './authentication.dto';
+import { JWT_Expiration } from './auth.dto';
 
 // Mock the JWT module
 jest.mock('jsonwebtoken');

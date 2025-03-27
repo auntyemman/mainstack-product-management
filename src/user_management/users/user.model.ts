@@ -6,8 +6,9 @@ export interface IUser extends Document {
   lastName: string;
   email: string;
   password: string;
-  role: UserRole | string;
+  role: UserRole;
   addresses: Array<IAddress>;
+  deletedAt: Date;
 }
 
 export interface IAddress extends Document {
@@ -36,6 +37,7 @@ const UserSchema = new Schema<IUser>(
     password: { type: String, required: true },
     role: { type: String, enum: Object.values(UserRole), default: UserRole.user, index: true },
     addresses: [AddressSchema],
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );
