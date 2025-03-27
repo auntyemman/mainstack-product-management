@@ -1,21 +1,21 @@
 import { inject, injectable } from 'inversify';
-import { emitterService } from '../../shared/event_bus/event_emitter';
+import { EmitterService } from '../../shared/event_bus/event_emitter';
 import { InventoryService } from './inventory.service';
-import { TYPES } from './di/inventory.di';
+import { INVENTORY_TYPES } from './di/inventory.di';
+import { EVENT_TYPES } from '../../shared/event_bus/di/event.di';
 
 // Event listeners for inventory service
 @injectable()
 export class InventoryEventListeners {
   private readonly emitter;
-  // private readonly inventoryService: InventoryService;
-  constructor(@inject(TYPES.InventoryService) private readonly inventoryService: InventoryService) {
+  constructor(@inject(INVENTORY_TYPES.InventoryService) private readonly inventoryService: InventoryService, @inject(EVENT_TYPES.EmitterService) emitterService: EmitterService) {
     this.emitter = emitterService;
-    // this.inventoryService = new InventoryService();
     this.inventoryService = inventoryService;
     this.productListeners();
   }
 
   private productListeners(): void {
+    // actions with retry strategy
     this.emitter.on(
       'productDeleted',
       async (id: string) => {

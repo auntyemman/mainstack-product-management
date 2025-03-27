@@ -10,27 +10,6 @@ import {
 } from '../utils/custom_error';
 import { logger } from '../configs/logger';
 
-/**
- * Global error handler middleware.
- *
- * Handles the following custom errors:
- *  - {@link CustomError}
- *  - {@link BadRequestError}
- *  - {@link RequestValidationError}
- *  - {@link NotFoundError}
- *  - {@link APIError}
- *  - {@link DatabaseConnectionError}
- *  - {@link NotAuthorizedError}
- *
- * Otherwise, logs the error to the file and sends a generic error response
- * to the client.
- *
- * @param {Error} err - The error to be handled.
- * @param {Request} req - The express request object.
- * @param {Response} res - The express response object.
- * @param {NextFunction} next - The express next function.
- * @returns {Response} - The response object.
- */
 
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof CustomError) {

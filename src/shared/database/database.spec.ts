@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { databaseConnection } from './database';
+import { databaseConnection } from '../configs/database';
 import { DatabaseConnectionError } from '../utils/custom_error';
 
 jest.mock('mongoose', () => ({

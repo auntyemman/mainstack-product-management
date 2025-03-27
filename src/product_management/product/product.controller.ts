@@ -2,14 +2,17 @@ import { Request, Response, NextFunction } from 'express';
 import { CreateProductDTO, ProductStatusDTO, UpdateProductDTO } from './product.dto';
 import { validateRequest } from '../../shared/utils/request_validator';
 import { ProductService } from './product.service';
-import { emitterService } from '../../shared/event_bus/event_emitter';
+import { EmitterService } from '../../shared/event_bus/event_emitter';
+import { inject, injectable } from 'inversify';
+import { EVENT_TYPES } from '../../shared/event_bus/di/event.di';
 
+@injectable()
 export class ProductController {
   private readonly productService;
-  private readonly emitter;
-  constructor() {
+  // private readonly eventEmitter;
+  constructor(@inject(EVENT_TYPES.EmitterService) private readonly eventEmitter: EmitterService) {
     this.productService = new ProductService();
-    this.emitter = emitterService;
+    this.eventEmitter = eventEmitter;
   }
   async createProduct(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
     const { _id } = res.locals.user.user;
@@ -60,7 +63,7 @@ export class ProductController {
     try {
       const id = req.params.id;
       const [product, inventory] = await Promise.all([
-        this.emitter.emitAsync('productDeleted', id),
+        this.eventEmitter.emitAsync('productDeleted', id),
         this.productService.deleteProduct(id),
       ]);
       return res.status(200).json({

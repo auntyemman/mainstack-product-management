@@ -4,10 +4,10 @@ import { InventoryController } from './inventory.controller';
 import { authUser } from '../../shared/middlewares/auth';
 import { adminRBAC } from '../../shared/middlewares/admin.RBAC';
 import { inventoryContainer } from './di/inventory.container';
-import { TYPES } from './di/inventory.di';
+import { INVENTORY_TYPES } from './di/inventory.di';
 
 // Retrieve the singleton controller from the container
-const inventoryController = inventoryContainer.get(TYPES.InventoryController);
+const inventoryController = inventoryContainer.get(INVENTORY_TYPES.InventoryController);
 export const inventory: Router = Router();
 // Bind methods to the controller
 // const inventoryCont = bindMethods(new InventoryController());

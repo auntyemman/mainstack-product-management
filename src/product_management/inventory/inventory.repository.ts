@@ -1,5 +1,5 @@
 import { QueryOptions } from 'mongoose';
-import { BaseRepository } from '../../shared/configs/base.repository';
+import { BaseRepository } from '../../shared/database/base.repository';
 import { paginate, PaginationResult } from '../../shared/utils/pagination';
 import { IInventory, Inventory } from './inventory.model';
 import { injectable } from 'inversify';

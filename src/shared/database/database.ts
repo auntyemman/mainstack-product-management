@@ -1,7 +1,7 @@
 import mongoose, { ConnectOptions } from 'mongoose';
-import { DATABASE_URI } from '.';
-import { logger } from './logger';
+import { logger } from '../configs/logger';
 import { DatabaseConnectionError } from '../utils/custom_error';
+import { environment } from '../utils/environment';
 
 /**
  * Connects to the MongoDB database. If connection fails,
@@ -10,7 +10,7 @@ import { DatabaseConnectionError } from '../utils/custom_error';
  */
 export const databaseConnection = async () => {
   try {
-    (await mongoose.connect(DATABASE_URI)) as ConnectOptions;
+    (await mongoose.connect(environment.database.db_uri)) as ConnectOptions;
     logger.info('Database connected successfully');
   } catch (error) {
     logger.error(`${error}`);

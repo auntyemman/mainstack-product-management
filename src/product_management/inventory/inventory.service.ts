@@ -4,14 +4,14 @@ import { PaginationResult } from '../../shared/utils/pagination';
 import { IInventory } from './inventory.model';
 import { InventoryRepository } from './inventory.repository';
 import { inject, injectable } from 'inversify';
-import { TYPES } from './di/inventory.di';
+import { INVENTORY_TYPES } from './di/inventory.di';
 
 // Service layer class for Inventory where the business logic is implemented
 @injectable()
 export class InventoryService {
   // private readonly inventoryRepo: InventoryRepository;
 
-  constructor(@inject(TYPES.InventoryRepository) private readonly inventoryRepo: InventoryRepository) {
+  constructor(@inject(INVENTORY_TYPES.InventoryRepository) private readonly inventoryRepo: InventoryRepository) {
     // this.inventoryRepo = new InventoryRepository();
     this.inventoryRepo = inventoryRepo;
   }

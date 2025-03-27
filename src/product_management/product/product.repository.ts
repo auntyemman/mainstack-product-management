@@ -1,5 +1,5 @@
 import { QueryOptions } from 'mongoose';
-import { BaseRepository } from '../../shared/configs/base.repository';
+import { BaseRepository } from '../../shared/database/base.repository';
 import { IProduct, Product } from './product.model';
 import { paginate, PaginationResult } from '../../shared/utils/pagination';
 

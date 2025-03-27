@@ -5,6 +5,7 @@ import 'reflect-metadata';
 import cookieParser from 'cookie-parser';
 import { errorHandler } from './shared/middlewares/error_handler';
 import { router } from '.';
+import { GlobalValidationMiddleware } from './shared/middlewares/dto_validation';
 
 /**
  * Creates an Express application with the default middlewares
@@ -25,6 +26,8 @@ export function createApp(): Application {
       credentials: true,
     }),
   );
+  // Apply Global Validation Middleware
+  app.use(GlobalValidationMiddleware);
   app.use('/api/v1', router);
   app.get('/', (req: Request, res: Response) => {
     return res.status(200).send('Hello, Mainstack!.');

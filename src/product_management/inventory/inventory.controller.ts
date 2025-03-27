@@ -3,14 +3,12 @@ import { InventoryService } from './inventory.service';
 import { validateRequest } from '../../shared/utils/request_validator';
 import { CreateInventoryDTO, UpdateInventoryDTO, UpdateInventoryQuntityDTO } from './inventory.dto';
 import { inject, injectable } from 'inversify';
-import { TYPES } from './di/inventory.di';
+import { INVENTORY_TYPES } from './di/inventory.di';
 
 // Controller class for inventory service
 @injectable()
-export class InventoryController {
-  // private readonly inventoryService: InventoryService;
-  constructor(@inject(TYPES.InventoryService) private readonly inventoryService: InventoryService) {
-    //this.inventoryService = new InventoryService();
+export class InventoryController {;
+  constructor(@inject(INVENTORY_TYPES.InventoryService) private readonly inventoryService: InventoryService) {
     this.inventoryService = inventoryService;
   }
 
