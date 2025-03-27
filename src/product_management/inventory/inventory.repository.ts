@@ -2,8 +2,10 @@ import { QueryOptions } from 'mongoose';
 import { BaseRepository } from '../../shared/configs/base.repository';
 import { paginate, PaginationResult } from '../../shared/utils/pagination';
 import { IInventory, Inventory } from './inventory.model';
+import { injectable } from 'inversify';
 
 // Inventory Repository class
+@injectable()
 export class InventoryRepository extends BaseRepository<IInventory> {
   private readonly inventoryModel;
   constructor() {

@@ -1,14 +1,17 @@
-import { emitterService } from '../../shared/configs/event_emitter';
+import { inject, injectable } from 'inversify';
+import { emitterService } from '../../shared/event_bus/event_emitter';
 import { InventoryService } from './inventory.service';
+import { TYPES } from './di/inventory.di';
 
 // Event listeners for inventory service
-// Used to decouple the system
+@injectable()
 export class InventoryEventListeners {
   private readonly emitter;
-  private readonly inventoryService;
-  constructor() {
+  // private readonly inventoryService: InventoryService;
+  constructor(@inject(TYPES.InventoryService) private readonly inventoryService: InventoryService) {
     this.emitter = emitterService;
-    this.inventoryService = new InventoryService();
+    // this.inventoryService = new InventoryService();
+    this.inventoryService = inventoryService;
     this.productListeners();
   }
 
@@ -34,5 +37,5 @@ export class InventoryEventListeners {
   }
 }
 
-export const inventoryEventListeners = new InventoryEventListeners();
-inventoryEventListeners;
+// export const inventoryEventListeners = new InventoryEventListeners();
+// inventoryEventListeners;

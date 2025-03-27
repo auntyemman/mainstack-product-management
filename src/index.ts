@@ -6,6 +6,6 @@ import { inventory } from './product_management/inventory/inventory.routes';
 export const router: Router = Router();
 
 // each route
-router.use('/users', user);
+router.use('/', user);
 router.use('/products', product);
 router.use('/inventories', inventory);

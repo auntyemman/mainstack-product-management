@@ -3,13 +3,19 @@ import { APIError, NotFoundError } from '../../shared/utils/custom_error';
 import { PaginationResult } from '../../shared/utils/pagination';
 import { IInventory } from './inventory.model';
 import { InventoryRepository } from './inventory.repository';
+import { inject, injectable } from 'inversify';
+import { TYPES } from './di/inventory.di';
 
 // Service layer class for Inventory where the business logic is implemented
+@injectable()
 export class InventoryService {
-  private readonly inventoryRepo;
-  constructor() {
-    this.inventoryRepo = new InventoryRepository();
+  // private readonly inventoryRepo: InventoryRepository;
+
+  constructor(@inject(TYPES.InventoryRepository) private readonly inventoryRepo: InventoryRepository) {
+    // this.inventoryRepo = new InventoryRepository();
+    this.inventoryRepo = inventoryRepo;
   }
+
 
   async createInventory(data: IInventory): Promise<IInventory> {
     const inventory = await this.inventoryRepo.create(data);

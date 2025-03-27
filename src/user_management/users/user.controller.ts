@@ -124,57 +124,57 @@ export class UserController {
       next(error);
     }
   }
-  async generateKeys(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-    try {
-      const { _id } = res.locals.user.user;
-      const keys = await this.userService.generateUserKeys(_id);
-      if (!keys) {
-        throw new APIError('could not generate keys');
-      }
-      const { publicKey, hashedPrivateKey } = keys;
-      return res.status(201).json({
-        status: 'success',
-        message: 'Key pair generated successfully.',
-        data: {
-          publicKey,
-          hashedPrivateKey, // Be cautious about sending back the private key; consider encrypting it first.
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+  // async generateKeys(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
+  //   try {
+  //     const { _id } = res.locals.user.user;
+  //     const keys = await this.userService.generateUserKeys(_id);
+  //     if (!keys) {
+  //       throw new APIError('could not generate keys');
+  //     }
+  //     const { publicKey, hashedPrivateKey } = keys;
+  //     return res.status(201).json({
+  //       status: 'success',
+  //       message: 'Key pair generated successfully.',
+  //       data: {
+  //         publicKey,
+  //         hashedPrivateKey, // Be cautious about sending back the private key; consider encrypting it first.
+  //       },
+  //     });
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // }
 
-  async getkey(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-    try {
-      const { _id } = res.locals.user.user;
-      const publicKey = await this.userService.deleteKeys(_id);
-      return res.status(200).json({
-        status: 'success',
-        data: {
-          publicKey,
-        },
-      })
-    } catch (error) {
-      next(error);
-    }
-  }
+  // async getkey(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
+  //   try {
+  //     const { _id } = res.locals.user.user;
+  //     const publicKey = await this.userService.deleteKeys(_id);
+  //     return res.status(200).json({
+  //       status: 'success',
+  //       data: {
+  //         publicKey,
+  //       },
+  //     })
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // }
 
-  async deletekey(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-    try {
-      const { _id } = res.locals.user.user;
-      const user = await this.userService.deleteKeys(_id);
-      return res.status(200).json({
-        status: 'success',
-        message: 'Key pair deleted successfully.',
-        data: {
-          user,
-        },
-      })
-    } catch (error) {
-      next(error);
-    }
-  }
+  // async deletekey(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
+  //   try {
+  //     const { _id } = res.locals.user.user;
+  //     const user = await this.userService.deleteKeys(_id);
+  //     return res.status(200).json({
+  //       status: 'success',
+  //       message: 'Key pair deleted successfully.',
+  //       data: {
+  //         user,
+  //       },
+  //     })
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // }
 
   async getUser(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
     try {

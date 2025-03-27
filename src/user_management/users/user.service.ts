@@ -33,41 +33,41 @@ export class UserService {
     return user;
   }
 
-  async generateUserKeys(userId: string) {
-    // Generate a new key pair
-    const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-      modulusLength: 2048,
-      publicKeyEncoding: {
-        type: 'spki',
-        format: 'pem',
-      },
-      privateKeyEncoding: {
-        type: 'pkcs8',
-        format: 'pem',
-      },
-    });
+  // async generateUserKeys(userId: string) {
+  //   // Generate a new key pair
+  //   const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+  //     modulusLength: 2048,
+  //     publicKeyEncoding: {
+  //       type: 'spki',
+  //       format: 'pem',
+  //     },
+  //     privateKeyEncoding: {
+  //       type: 'pkcs8',
+  //       format: 'pem',
+  //     },
+  //   });
 
-    const hashedPrivateKey = await hashPassword(privateKey);
-    // Store the keys in the mock database (in a real application, use a secure storage solution)
+  //   const hashedPrivateKey = await hashPassword(privateKey);
+  //   // Store the keys in the mock database (in a real application, use a secure storage solution)
 
-    // await this.updateUser(userId, { publicKey, hashedPrivateKey });
-    return {
-      publicKey,
-      hashedPrivateKey,
-    };
-  }
+  //   // await this.updateUser(userId, { publicKey, hashedPrivateKey });
+  //   return {
+  //     publicKey,
+  //     hashedPrivateKey,
+  //   };
+  // }
 
-  // get user public key
-  async getPulickey(userId: string) {
-    const user = await this.getUser(userId);
-    return user.publicKey;
-  }
+  // // get user public key
+  // async getPulickey(userId: string) {
+  //   const user = await this.getUser(userId);
+  //   return user.publicKey;
+  // }
 
-  // delete user public and private keys
-  async deleteKeys(userId: string) {
-    const user = await this.updateUser(userId, { publicKey: null, privateKey: null });
-    return user;
-  }
+  // // delete user public and private keys
+  // async deleteKeys(userId: string) {
+  //   const user = await this.updateUser(userId, { publicKey: null, privateKey: null });
+  //   return user;
+  // }
 
   async getUser(userId: string): Promise<IUser> {
     const user = await this.userRepo.findById(userId);

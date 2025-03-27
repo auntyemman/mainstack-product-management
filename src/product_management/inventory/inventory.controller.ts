@@ -2,25 +2,18 @@ import { NextFunction, Request, Response } from 'express';
 import { InventoryService } from './inventory.service';
 import { validateRequest } from '../../shared/utils/request_validator';
 import { CreateInventoryDTO, UpdateInventoryDTO, UpdateInventoryQuntityDTO } from './inventory.dto';
+import { inject, injectable } from 'inversify';
+import { TYPES } from './di/inventory.di';
 
 // Controller class for inventory service
+@injectable()
 export class InventoryController {
-  private readonly inventoryService;
-  constructor() {
-    this.inventoryService = new InventoryService();
+  // private readonly inventoryService: InventoryService;
+  constructor(@inject(TYPES.InventoryService) private readonly inventoryService: InventoryService) {
+    //this.inventoryService = new InventoryService();
+    this.inventoryService = inventoryService;
   }
-  /**
-   * Creates a new inventory
-   * @example
-   * curl -X POST \
-   *   http://localhost:3000/api/v1/inventory \
-   *   -H 'Content-Type: application/json' \
-   *   -d '{"productId": "61c7c5c5f1e7f39d94937f2c","quantity": 10,"location": "New York"}'
-   * @param {Request} req - The express request object
-   * @param {Response} res - The express response object
-   * @param {NextFunction} next - The express next function
-   * @returns {Promise<object | unknown>} - The response object
-   */
+
   async createInventory(
     req: Request,
     res: Response,
@@ -39,16 +32,7 @@ export class InventoryController {
       next(error);
     }
   }
-  /**
-   * Fetches a single inventory by its id
-   * @example
-   * curl -X GET \
-   *   http://localhost:3000/api/v1/inventory/61c7c5c5f1e7f39d94937f2c
-   * @param {Request} req - The express request object
-   * @param {Response} res - The express response object
-   * @param {NextFunction} next - The express next function
-   * @returns {Promise<object | unknown>} - The response object
-   */
+
   async getInventory(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
     try {
       const id = req.params.id;
@@ -63,18 +47,6 @@ export class InventoryController {
     }
   }
 
-  /**
-   * Updates an existing inventory
-   * @example
-   * curl -X PUT \
-   *   http://localhost:3000/api/v1/inventory/61c7c5c5f1e7f39d94937f2c \
-   *   -H 'Content-Type: application/json' \
-   *   -d '{"quantity": 10}'
-   * @param {Request} req - The express request object
-   * @param {Response} res - The express response object
-   * @param {NextFunction} next - The express next function
-   * @returns {Promise<object | unknown>} - The response object
-   */
   async updateInventory(
     req: Request,
     res: Response,

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { CreateProductDTO, ProductStatusDTO, UpdateProductDTO } from './product.dto';
 import { validateRequest } from '../../shared/utils/request_validator';
 import { ProductService } from './product.service';
-import { emitterService } from '../../shared/configs/event_emitter';
+import { emitterService } from '../../shared/event_bus/event_emitter';
 
 export class ProductController {
   private readonly productService;

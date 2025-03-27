@@ -363,6 +363,41 @@
   resolved "https://registry.npmjs.org/@humanwhocodes/object-schema/-/object-schema-2.0.3.tgz"
   integrity sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==
 
+"@inversifyjs/common@1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@inversifyjs/common/-/common-1.5.0.tgz#542cdb0cfc02e36cca5a19208af726ecf904d400"
+  integrity sha512-Qj5BELk11AfI2rgZEAaLPmOftmQRLLmoCXgAjmaF0IngQN5vHomVT5ML7DZ3+CA5fgGcEVMcGbUDAun+Rz+oNg==
+
+"@inversifyjs/container@1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@inversifyjs/container/-/container-1.6.0.tgz#cb5898a25435229e322cd931a26fc09c6f40c555"
+  integrity sha512-dntAu6TJRmTJl8+VXksBmvpfNtXQAEG6DkcdwOyv6xIr4ASdMdG2+14XKY5xUX8luk3CDCnK0j5XM8uxROfWuw==
+  dependencies:
+    "@inversifyjs/common" "1.5.0"
+    "@inversifyjs/core" "5.1.0"
+    "@inversifyjs/reflect-metadata-utils" "1.1.0"
+
+"@inversifyjs/core@5.1.0":
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/@inversifyjs/core/-/core-5.1.0.tgz#b0abccce7102d59f9d4aed8eb4d2cb64631d1579"
+  integrity sha512-mxawKEUmRAwQeNGymf2WucPNEnyWnaGMTi2cOyIq9/zqMbo8LpXh8OFkGvJciFWznC6fDnP27O80u+sY/JjU9g==
+  dependencies:
+    "@inversifyjs/common" "1.5.0"
+    "@inversifyjs/prototype-utils" "0.1.0"
+    "@inversifyjs/reflect-metadata-utils" "1.1.0"
+
+"@inversifyjs/prototype-utils@0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@inversifyjs/prototype-utils/-/prototype-utils-0.1.0.tgz#1378596f3d708244f390e9b233599b862aba450d"
+  integrity sha512-lNz1yyajMRDXBHLvJsYYX81FcmeD15e5Qz1zAZ/3zeYTl+u7ZF/GxNRKJzNOloeMPMtuR8BnvzHA1SZxjR+J9w==
+  dependencies:
+    "@inversifyjs/common" "1.5.0"
+
+"@inversifyjs/reflect-metadata-utils@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@inversifyjs/reflect-metadata-utils/-/reflect-metadata-utils-1.1.0.tgz#193ab71b92d47a8073e65e5bab640762bc435dcb"
+  integrity sha512-jmuAuC3eL1GnFAYfJGJOMKRDL9q1mgzOyrban6zxfM8Yg1FUHsj25h27bW2G7p8X1Amvhg3MLkaOuogszkrofA==
+
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
   resolved "https://registry.npmjs.org/@istanbuljs/load-nyc-config/-/load-nyc-config-1.1.0.tgz"
@@ -2329,6 +2364,15 @@ inherits@2, inherits@2.0.4, inherits@^2.0.3:
   resolved "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz"
   integrity sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
 
+inversify@^7.2.0:
+  version "7.2.0"
+  resolved "https://registry.yarnpkg.com/inversify/-/inversify-7.2.0.tgz#a958bf151d7951c9bc0d821931b097c810c7210d"
+  integrity sha512-zPXKp7ybicPsrhlNZaJscZ9yeg0DZtnCGuNfMpMsso9Jx1tNepSS2CqPrrP8Pc75nH/5d/qB2rYKiv1BEI1gFQ==
+  dependencies:
+    "@inversifyjs/common" "1.5.0"
+    "@inversifyjs/container" "1.6.0"
+    "@inversifyjs/core" "5.1.0"
+
 ipaddr.js@1.9.1:
   version "1.9.1"
   resolved "https://registry.npmjs.org/ipaddr.js/-/ipaddr.js-1.9.1.tgz"
@@ -3041,7 +3085,7 @@ lru-cache@^5.1.1:
     express "^4.18.2"
     helmet "^7.1.0"
     jsonwebtoken "^9.0.2"
-    mainstack_product_store "file:../../AppData/Local/Yarn/Cache/v6/npm-mainstack-product-store-1.0.0-777f871e-045a-4d08-ac7a-13a75063a3be-1743028358134/node_modules/mainstack_product_store"
+    mainstack_product_store "file:../../AppData/Local/Yarn/Cache/v6/npm-mainstack-product-store-1.0.0-93e9af5e-7540-4091-83fb-68ba6c244a53-1743040508363/node_modules/mainstack_product_store"
     mongoose "^8.6.2"
     nodemailer "^6.9.9"
     reflect-metadata "^0.2.1"

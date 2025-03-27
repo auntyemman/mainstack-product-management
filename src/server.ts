@@ -1,8 +1,9 @@
 import { createApp } from './app';
 import { databaseConnection } from './shared/configs/database';
 import { logger } from './shared/configs/logger';
-import { inventoryEventListeners } from './product_management/inventory/inventory.events';
+// import { inventoryEventListeners } from './product_management/inventory/inventory.event_listeners';
 import { PORT } from './shared/configs';
+import { inventoryContainer } from './product_management/inventory/di/inventory.container';
 
 export class Server {
   private readonly app;
@@ -17,7 +18,8 @@ export class Server {
       this.app.listen(PORT, () => {
         logger.info(`app is running on port ${PORT}`);
       });
-      inventoryEventListeners;
+      // initialize event listeners
+      inventoryContainer.get('InventoryEventListeners');
       logger.info('Server started successfully.');
     } catch (error) {
       logger.error(error);
