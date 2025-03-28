@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthenticationService } from '../../user_management/auth/auth.service';
 import { BadRequestError, NotAuthorizedError } from '../utils/custom_error';
+import { createAccessToken, verifyJWT } from '../utils/jwt.util';
 
 export const authUser = async (req: Request, res: Response, next: NextFunction) => {
-  const authentication = new AuthenticationService();
-
   try {
     const authorizationHeader = req.headers.authorization;
 
@@ -13,7 +11,7 @@ export const authUser = async (req: Request, res: Response, next: NextFunction) 
     }
 
     const token = authorizationHeader.split(' ')[1];
-    const result = await AuthenticationService.verifyJWT(token);
+    const result = await verifyJWT(token);
     if (!result) {
       throw new NotAuthorizedError();
     }
@@ -26,7 +24,7 @@ export const authUser = async (req: Request, res: Response, next: NextFunction) 
         throw new BadRequestError('you may need to login again');
       }
 
-      const refreshTokenResult = await AuthenticationService.verifyJWT(refreshToken);
+      const refreshTokenResult = await verifyJWT(refreshToken);
       if (
         !refreshTokenResult ||
         refreshTokenResult.valid === false ||
@@ -36,7 +34,7 @@ export const authUser = async (req: Request, res: Response, next: NextFunction) 
       }
 
       // Issue new access token
-      const newAccessToken = authentication.createAccessToken({ user: refreshTokenResult.decoded });
+      const newAccessToken = createAccessToken({ user: refreshTokenResult.decoded });
 
       // Set new access token in response header
       res.setHeader('Authorization', `Bearer ${newAccessToken}`);

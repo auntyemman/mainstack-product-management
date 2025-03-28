@@ -13,8 +13,8 @@ export const environment = {
   },
   jwt: {
     secret: getEnvVariable('JWT_SECRET'),
-    expiresIn: parseInt(getEnvVariable('JWT_EXPIRES_IN'), 10),
-    freshTokenExpiresIn: parseInt(getEnvVariable('JWT_REFRESH_EXPIRES_IN'), 10),
+    expiresIn: getEnvVariable('JWT_EXPIRES_IN'),
+    freshTokenExpiresIn: getEnvVariable('JWT_REFRESH_EXPIRES_IN'),
   },
   app: {
     port: parseInt(getEnvVariable('PORT'), 10),

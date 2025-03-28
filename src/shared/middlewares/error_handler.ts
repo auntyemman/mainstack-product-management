@@ -34,10 +34,11 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     return res.status(err.statusCode).send({ errors: err.serializeErrors() });
   } else {
     // Log the error that was not caught to the file
+    console.log(err);
     logger.error(`${req.originalUrl} - ${req.method} - ${req.ip} - ${err.message}`);
 
-    // Send a generic error response to the client
-    return res.status(400).send({
+    // Send a generic error response that is not handled to the client
+    return res.status(500).send({
       errors: [{ message: err.message }],
     });
   }

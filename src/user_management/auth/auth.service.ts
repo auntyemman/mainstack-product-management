@@ -1,15 +1,18 @@
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../../shared/configs';
-import { BadRequestError, NotFoundError } from '../../shared/utils/custom_error';
-import { JWT_Expiration } from './auth.dto';
+import { BadRequestError, NotFoundError } from '../../shared/utils/custom_error';;
 import { UserRepository } from '../users/user.repository';
 import { IUser } from '../users/user.model';
 import { comparePasswords, hashPassword } from '../../shared/utils/password_hash';
+import { inject, injectable } from 'inversify';
+import { USER_TYPES } from '../users/di/user.types';
+import { createAccessToken, createRefreshToken, verifyJWT } from '../../shared/utils/jwt.util';
 
+@injectable()
 export class AuthenticationService {
-  private readonly userRepo;
-  constructor() {
-    this.userRepo = new UserRepository();
+  // private readonly userRepo;
+  constructor(@inject(USER_TYPES.UserRepository) private readonly userRepo: UserRepository) {
+    this.userRepo = userRepo;
   }
   async createUser(data: IUser): Promise<IUser> {
     const user = await this.userRepo.findByEmail(data.email);
@@ -21,7 +24,7 @@ export class AuthenticationService {
     return await this.userRepo.create(data);
   }
 
-  async login(data: IUser): Promise<IUser> {
+  async login(data: IUser): Promise<{ accessToken: string; refreshToken: string }> {
     const { email, password } = data;
     const user = await this.userRepo.findByEmail(email);
     if (!user) {
@@ -31,32 +34,22 @@ export class AuthenticationService {
     if (!passwordMatch) {
       throw new BadRequestError('Password not match');
     }
-    return user;
+    // Generate both access and refresh tokens
+    const accessToken = createAccessToken({ user: user });
+    const refreshToken = createRefreshToken({ user: user });
+    return { accessToken, refreshToken };
   }
 
-  createAccessToken = (payload: object) => {
-    return this.token(payload, JWT_Expiration.accessToken);
-  };
-
-  createRefreshToken = (payload: object) => {
-    return this.token(payload, JWT_Expiration.refreshToken);
-  };
-
-  static verifyJWT = async (token: string) => {
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      return { decoded, expired: false, valid: true };
-    } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
-        return { decoded: null, expired: true, valid: false };
-      }
-      if (error instanceof jwt.JsonWebTokenError) {
-        throw new BadRequestError('Invalid token');
-      }
+  async refreshToken(refreshToken: string): Promise<string> {
+    if (!refreshToken) {
+      throw new BadRequestError('Refresh token not found');
     }
-  };
+    // Verify the refresh token
+    const decoded = await verifyJWT(refreshToken);
 
-  private token = (payload: object, expiration: string) => {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: expiration, algorithm: 'HS256' });
-  };
+    // Generate a new access token
+    const newAccessToken = createAccessToken({ user: decoded });
+    return newAccessToken;
+  }
+
 }

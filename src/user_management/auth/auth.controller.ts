@@ -1,30 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
 
-import { UserService } from '../users/user.service';
 import { validateRequest } from '../../shared/utils/request_validator';
 import { SignUpDTO, SignInDTO, UpdateDTO, UserRole, CreateAdminDTO } from '../users/user.dto';
 import { AuthenticationService } from '../auth/auth.service';
-import { APIError } from '../../shared/utils/custom_error';
+import { APIError, BadRequestError } from '../../shared/utils/custom_error';
 import crypto from 'crypto';
 import { successResponse } from '../../shared/utils/api_response';
-import { ApiResponse } from '../../shared/types/api_response.type';
-import { IUser } from '../users/user.model';
+import { inject, injectable } from 'inversify';
+import { USER_TYPES } from '../users/di/user.types';
+import { createAccessToken, verifyJWT } from '../../shared/utils/jwt.util';
+import { AUTH_TYPES } from './di/auth.types';
 
+@injectable()
 export class AuthController {
-  private readonly userService;
-  private readonly authService;
-  constructor() {
-    this.userService = new UserService();
-    this.authService = new AuthenticationService();
+  // private readonly authService;
+  constructor(@inject(AUTH_TYPES.AuthService) private readonly authService: AuthenticationService) {
+    this.authService = authService;
   }
 
   async signUp(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const validated = await validateRequest(SignUpDTO, req.body);
-      const user = await this.userService.createUser(validated);
-      if (!user) {
-        throw new APIError('Failed to create user');
-      }
+      const user = await this.authService.createUser(validated);
       // testable typed response 
       const response = successResponse(201, 'User registered successfully', user);
       return res.status(response.statusCode).json(response);
@@ -33,37 +30,11 @@ export class AuthController {
     }
   }
 
-  async createAdmin(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-    try {
-      const payload = { ...req.body, role: UserRole.admin };
-      const validated = await validateRequest(CreateAdminDTO, payload);
-      const user = await this.userService.createUser(validated);
-      if (!user) {
-        throw new APIError('Failed to create user');
-      }
-      const { id, email } = user;
-      return res.status(201).json({
-        status: 'success',
-        message: `Admin creation successful`,
-        data: {
-          id: id,
-          email: email,
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async login(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
+  async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const validated = await validateRequest(SignInDTO, req.body);
-      const user = await this.userService.login(validated);
-
-      // Generate both access and refresh tokens
-      const accessToken = this.authService.createAccessToken({ user: user });
-      const refreshToken = this.authService.createRefreshToken({ user: user });
-
+      const { accessToken, refreshToken } = await this.authService.login(validated);
+      const data = { accessToken: accessToken, refreshToken: refreshToken };
       // Store refresh token in HTTP-only cookies
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true, // Prevents JS from accessing the token
@@ -71,52 +42,20 @@ export class AuthController {
         sameSite: 'strict',
       });
 
-      return res.status(200).json({
-        status: 'success',
-        message: 'Logged in successfully',
-        data: { accessToken, refreshToken },
-      });
+      const response = successResponse(201, 'User logged in successfully', data);
+      return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
   }
 
-  async refreshToken(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
+  async refreshToken(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const refreshToken = req.cookies.refreshToken;
-
-      if (!refreshToken) {
-        throw new APIError('Refresh token not found');
-      }
-
-      // Verify the refresh token
-      const decoded = await AuthenticationService.verifyJWT(refreshToken);
-
-      // Generate a new access token
-      const newAccessToken = this.authService.createAccessToken({ user: decoded });
-
-      return res.status(200).json({
-        status: 'success',
-        message: 'New access token generated',
-        data: { accessToken: newAccessToken },
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async logout(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-    try {
-      res.clearCookie('refreshToken', {
-        httpOnly: true,
-        secure: true, // process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-      });
-
-      return res.status(200).json({
-        status: 'success',
-        message: 'Logged out successfully',
-      });
+      const newAccessToken = await this.authService.refreshToken(refreshToken);
+      
+      const response = successResponse(201, 'New access token generated', { accessToken: newAccessToken });
+      return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
