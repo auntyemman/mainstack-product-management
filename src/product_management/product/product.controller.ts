@@ -5,55 +5,46 @@ import { ProductService } from './product.service';
 import { EmitterService } from '../../shared/event_bus/event_emitter';
 import { inject, injectable } from 'inversify';
 import { EVENT_TYPES } from '../../shared/event_bus/di/event.di';
+import { PRODUCT_TYPES } from './di/product.types';
+import { successResponse } from '../../shared/utils/api_response';
 
 @injectable()
 export class ProductController {
-  private readonly productService;
-  // private readonly eventEmitter;
-  constructor(@inject(EVENT_TYPES.EmitterService) private readonly eventEmitter: EmitterService) {
-    this.productService = new ProductService();
+  constructor(@inject(EVENT_TYPES.EmitterService) private readonly eventEmitter: EmitterService, @inject(PRODUCT_TYPES.ProductService) private readonly productService: ProductService) {
+    this.productService = productService;
     this.eventEmitter = eventEmitter;
   }
-  async createProduct(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-    const { _id } = res.locals.user.user;
+  async createProduct(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    const userId  = res.locals.user._id;
     try {
-      const payload = { ...req.body, createdBy: _id };
+      const payload = { ...req.body, createdBy: userId.toString() };
       const validated = await validateRequest(CreateProductDTO, payload);
       const product = await this.productService.createProduct(validated);
-      return res.status(201).json({
-        status: 'success',
-        message: 'Product created successfully',
-        data: { product },
-      });
+
+      const response = successResponse(201, 'Product created successfully', product );
+      return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
   }
 
-  async getProduct(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
+  async getProduct(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const id = req.params.id;
       const product = await this.productService.getProduct(id);
-      return res.status(200).json({
-        status: 'success',
-        message: 'Product fetched successfully',
-        data: { product },
-      });
+      const response = successResponse(200, 'Product fetched successfully', product );
+      return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
   }
 
-  async publishProduct(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
+  async publishProduct(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const id = req.params.id;
-      const validated = await validateRequest(ProductStatusDTO, req.body);
-      const product = await this.productService.publishProduct(id, validated);
-      return res.status(200).json({
-        status: 'success',
-        message: 'Product published successfully',
-        data: { product },
-      });
+      const product = await this.productService.publishProduct(id);
+      const response = successResponse(200, 'Product published successfully', product );
+      return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
@@ -76,7 +67,7 @@ export class ProductController {
     }
   }
 
-  async getProducts(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
+  async getProducts(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const limit = parseInt(req.query.limit as string) || 10;
       const page = parseInt(req.query.page as string) || 1;
@@ -98,11 +89,8 @@ export class ProductController {
         query.createdBy = createdBy;
       }
       const products = await this.productService.getProducts(query, limit, page);
-      return res.status(200).json({
-        status: 'success',
-        message: 'Products fetched successfully',
-        data: { products },
-      });
+      const response = successResponse(200, 'Products fetched successfully', products );
+      return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }

@@ -7,6 +7,8 @@ import {
   APIError,
   DatabaseConnectionError,
   NotAuthorizedError,
+  ConflictError,
+  UnprocessableEntityError,
 } from '../utils/custom_error';
 import { logger } from '../configs/logger';
 
@@ -16,6 +18,12 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     return res.status(err.statusCode).send({ errors: err.serializeErrors() });
   }
   if (err instanceof BadRequestError) {
+    return res.status(err.statusCode).send({ errors: err.serializeErrors() });
+  }
+  if (err instanceof ConflictError) {
+    return res.status(err.statusCode).send({ errors: err.serializeErrors() });
+  }
+  if (err instanceof UnprocessableEntityError) {
     return res.status(err.statusCode).send({ errors: err.serializeErrors() });
   }
   if (err instanceof RequestValidationError) {

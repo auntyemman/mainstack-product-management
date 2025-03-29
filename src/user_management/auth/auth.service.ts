@@ -7,6 +7,7 @@ import { comparePasswords, hashPassword } from '../../shared/utils/password_hash
 import { inject, injectable } from 'inversify';
 import { USER_TYPES } from '../users/di/user.types';
 import { createAccessToken, createRefreshToken, verifyJWT } from '../../shared/utils/jwt.util';
+import { JWTPayload } from './auth.dto';
 
 @injectable()
 export class AuthenticationService {
@@ -35,8 +36,8 @@ export class AuthenticationService {
       throw new BadRequestError('Password not match');
     }
     // Generate both access and refresh tokens
-    const accessToken = createAccessToken({ user: user });
-    const refreshToken = createRefreshToken({ user: user });
+    const accessToken = createAccessToken({ sub: user._id } as JWTPayload);
+    const refreshToken = createRefreshToken({ sub: user._id } as JWTPayload);
     return { accessToken, refreshToken };
   }
 
@@ -45,10 +46,12 @@ export class AuthenticationService {
       throw new BadRequestError('Refresh token not found');
     }
     // Verify the refresh token
-    const decoded = await verifyJWT(refreshToken);
-
+    const data = await verifyJWT(refreshToken);
+    if (!data || !data.decoded) {
+      throw new BadRequestError('Invalid refresh token');
+    }
     // Generate a new access token
-    const newAccessToken = createAccessToken({ user: decoded });
+    const newAccessToken = createAccessToken({ sub: data.decoded.sub } as JWTPayload);
     return newAccessToken;
   }
 

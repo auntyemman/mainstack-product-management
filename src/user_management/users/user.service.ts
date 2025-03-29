@@ -5,12 +5,22 @@ import { APIError, BadRequestError, NotFoundError } from '../../shared/utils/cus
 import crypto from 'crypto';
 import { inject, injectable } from 'inversify';
 import { USER_TYPES } from './di/user.types';
+import { UserRole } from './user.dto';
 
 @injectable()
 export class UserService {
   // private readonly userRepo;
   constructor(@inject(USER_TYPES.UserRepository) private readonly userRepo: UserRepository) {
     this.userRepo = userRepo;
+  }
+
+  async makeAdmin(userId: string): Promise<IUser> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new NotFoundError('user not found');
+    }
+    const updatedUser = await this.updateUser(userId, { role: UserRole.admin });
+    return updatedUser;
   }
 
   // async generateUserKeys(userId: string) {
@@ -50,7 +60,6 @@ export class UserService {
 
   async getUser(userId: string): Promise<IUser> {
     const user = await this.userRepo.findById(userId);
-
     if (!user) {
       throw new NotFoundError('user not found');
     }

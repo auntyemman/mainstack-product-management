@@ -1,10 +1,6 @@
 import { IsString, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
 
-// DTOs are used to validate and sanitize data before it is sent to the database
 export class CreateInventoryDTO {
-  @IsNotEmpty()
-  @IsString()
-  product!: string;
 
   @IsNotEmpty()
   @IsNumber()
@@ -15,9 +11,6 @@ export class CreateInventoryDTO {
   location!: string;
 }
 export class UpdateInventoryDTO {
-  @IsString()
-  @IsOptional()
-  product?: string;
 
   @IsOptional()
   @IsNumber()

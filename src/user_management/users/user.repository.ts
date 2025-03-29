@@ -5,10 +5,10 @@ import { USER_TYPES } from './di/user.types';
 
 @injectable()
 export class UserRepository extends BaseRepository<IUser> {
-  // private readonly userModel;
-  constructor(@inject(USER_TYPES.User) private userModel: typeof User) {
+  private readonly userModel;
+  constructor() {
     super(User);
-    this.userModel = userModel;
+    this.userModel = User;
   }
 
   async findByEmail(email: string): Promise<IUser | null> {

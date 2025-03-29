@@ -4,6 +4,7 @@ import { validateRequest } from '../../shared/utils/request_validator';
 import { CreateInventoryDTO, UpdateInventoryDTO, UpdateInventoryQuntityDTO } from './inventory.dto';
 import { inject, injectable } from 'inversify';
 import { INVENTORY_TYPES } from './di/inventory.di';
+import { successResponse } from '../../shared/utils/api_response';
 
 // Controller class for inventory service
 @injectable()
@@ -16,30 +17,26 @@ export class InventoryController {;
     req: Request,
     res: Response,
     next: NextFunction,
-  ): Promise<object | unknown> {
+  ): Promise<Response | void> {
+    const productId = req.params.productId;
     try {
       const data = req.body;
       const validated = await validateRequest(CreateInventoryDTO, data);
-      const inventory = await this.inventoryService.createInventory(validated);
-      return res.status(201).json({
-        status: 'success',
-        message: 'Inventory created successfully',
-        data: { inventory },
-      });
+      const inventory = await this.inventoryService.createInventory(productId, validated);
+      const response = successResponse(201, `Inventory created successfully for product id ${productId}`, inventory);
+      return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
   }
 
-  async getInventory(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
+  // get the invetory for a product
+  async getInventory(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
     try {
-      const id = req.params.id;
-      const inventory = await this.inventoryService.getInventory(id);
-      return res.status(200).json({
-        status: 'success',
-        message: 'Inventory fetched successfully',
-        data: { inventory },
-      });
+      const productId = req.params.productId;
+      const inventory = await this.inventoryService.getInventory(productId);
+      const response = successResponse(200, 'Product inventory fetched successfully', inventory);
+      return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
@@ -49,16 +46,13 @@ export class InventoryController {;
     req: Request,
     res: Response,
     next: NextFunction,
-  ): Promise<object | unknown> {
+  ): Promise<Response | unknown> {
     try {
-      const id = req.params.id;
+      const productId = req.params.productId;
       const validated = await validateRequest(UpdateInventoryDTO, req.body);
-      const inventory = await this.inventoryService.updateInventory(id, validated);
-      return res.status(200).json({
-        status: 'success',
-        message: 'Inventory updated successfully',
-        data: { inventory },
-      });
+      const inventory = await this.inventoryService.updateInventory(productId, validated);
+      const response = successResponse(200, 'Product inventory updated successfully', inventory);
+      return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
@@ -124,56 +118,20 @@ export class InventoryController {;
     }
   }
 
-  /**
-   * Fetches a single inventory by its product id
-   * @example
-   * curl -X GET \
-   *   http://localhost:3000/api/v1/inventory/product/61c7c5c5f1e7f39d94937f2c
-   * @param {Request} req - The express request object
-   * @param {Response} res - The express response object
-   * @param {NextFunction} next - The express next function
-   * @returns {Promise<object | unknown>} - The response object
-   */
-  async getIventoryByProductId(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<object | unknown> {
-    try {
-      const productId = req.params.productId;
-      const inventory = await this.inventoryService.getInventoryByProductId(productId);
-      return res.status(200).json({
-        status: 'success',
-        message: 'Inventory fetched successfully',
-        data: { inventory },
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  /**
-   * Fetches all inventories
-   * @example
-   * curl -X GET \
-   *   http://localhost:3000/api/v1/inventory?limit=10&page=1
-   * @param {Request} req - The express request object
-   * @param {Response} res - The express response object
-   * @param {NextFunction} next - The express next function
-   * @returns {Promise<object | unknown>} - The response object
-   */
   async getInventories(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
     try {
-      const limit = parseInt(req.query.limit as string) || 10;
-      const page = parseInt(req.query.page as string) || 1;
+      // const limit = parseInt(req.query.limit as string) || 10;
+      // const page = parseInt(req.query.page as string) || 1;
       const query: any = {};
-      const inventories = await this.inventoryService.getInventories(query, limit, page);
+      console.log(query);
+      // const inventories = await this.inventoryService.getInventories(query, limit, page);
       return res.status(200).json({
         status: 'success',
         message: 'Inventories fetched successfully',
-        data: { inventories },
+        // data: { inventories },
       });
     } catch (error) {
+      console.log('controller error', error);
       next(error);
     }
   }

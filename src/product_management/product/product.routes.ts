@@ -6,16 +6,24 @@ import { bindMethods } from '../../shared/utils/bind_method';
 import { EVENT_TYPES } from '../../shared/event_bus/di/event.di';
 import { eventContainer } from '../../shared/event_bus/di/event.container';
 import { EmitterService } from '../../shared/event_bus/event_emitter';
+import { userContainer } from '../../user_management/users/di/user.container';
+import { UserRepository } from '../../user_management/users/user.repository';
+import { USER_TYPES } from '../../user_management/users/di/user.types';
+import { productContainer } from './di/product.container';
+import { PRODUCT_TYPES } from './di/product.types';
 
 // di container
-const eventEmitterService = eventContainer.get<EmitterService>(EVENT_TYPES.EmitterService);
-const productCont = bindMethods(new ProductController(eventEmitterService));
+const productController = productContainer.get<ProductController>(PRODUCT_TYPES.ProductController);
+const productCont = bindMethods(productController) as ProductController;
 export const product: Router = Router();
-// const productCont = bindMethods(eventEmitterService) as ProductController;
 
-product.post('/create', authUser, adminRBAC, productCont.createProduct);
-product.get('/:id', authUser, productCont.getProduct);
-product.patch('/publish/:id', authUser, adminRBAC, productCont.publishProduct);
-product.delete('/:id', authUser, adminRBAC, productCont.deleteProduct);
-product.get('/list', authUser, productCont.getProducts);
-product.put('/update/:id', authUser, adminRBAC, productCont.updateProduct);
+// Pass userRepository into the middleware
+const userRepository = userContainer.get<UserRepository>(USER_TYPES.UserRepository);
+const authMiddleware = authUser(userRepository);
+
+product.post('/', authMiddleware, adminRBAC, productCont.createProduct);
+product.get('/:id', authMiddleware, productCont.getProduct);
+product.patch('/:id', authMiddleware, adminRBAC, productCont.publishProduct);
+product.delete('/:id', authMiddleware, adminRBAC, productCont.deleteProduct);
+product.get('/', authMiddleware, productCont.getProducts);
+product.put('/update/:id', authMiddleware, adminRBAC, productCont.updateProduct);

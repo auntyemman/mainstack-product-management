@@ -18,12 +18,12 @@ export class InventoryEventListeners {
     // actions with retry strategy
     this.emitter.on(
       'productDeleted',
-      async (id: string) => {
+      async (productId: string) => {
         const maxRetries = 3;
         let retryCount = 0;
         while (retryCount < maxRetries) {
           try {
-            const inventory = await this.inventoryService.getInventoryByProductId(id);
+            const inventory = await this.inventoryService.getInventory(productId);
             await this.inventoryService.deleteInventory(inventory.id);
             break;
           } catch (error) {

@@ -3,7 +3,8 @@ export type User = {
   email: string;
 };
 
-export interface JWTPayload extends User {
+export interface JWTPayload {
+  sub: string;
   iat: number;
   exp: number;
 }

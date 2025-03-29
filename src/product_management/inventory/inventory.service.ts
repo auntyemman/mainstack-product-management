@@ -1,5 +1,5 @@
 import { QueryOptions } from 'mongoose';
-import { APIError, NotFoundError } from '../../shared/utils/custom_error';
+import { APIError, ConflictError, NotFoundError, UnprocessableEntityError } from '../../shared/utils/custom_error';
 import { PaginationResult } from '../../shared/utils/pagination';
 import { IInventory } from './inventory.model';
 import { InventoryRepository } from './inventory.repository';
@@ -9,24 +9,28 @@ import { INVENTORY_TYPES } from './di/inventory.di';
 // Service layer class for Inventory where the business logic is implemented
 @injectable()
 export class InventoryService {
-  // private readonly inventoryRepo: InventoryRepository;
-
   constructor(@inject(INVENTORY_TYPES.InventoryRepository) private readonly inventoryRepo: InventoryRepository) {
-    // this.inventoryRepo = new InventoryRepository();
     this.inventoryRepo = inventoryRepo;
   }
 
 
-  async createInventory(data: IInventory): Promise<IInventory> {
+  async createInventory(productId: string, data: IInventory): Promise<IInventory> {
+    // attach product id to inventory payload
+    data.product = productId;
+    const existingInventory = await this.inventoryRepo.findOne({ product: productId });
+    if (existingInventory) {
+      throw new ConflictError('Inventory already exists for this product');
+    }
     const inventory = await this.inventoryRepo.create(data);
     if (!inventory) {
-      throw new APIError('Failed to create inventory');
+      throw new UnprocessableEntityError('Failed to create inventory');
     }
     return inventory;
   }
 
-  async getInventory(id: string): Promise<IInventory> {
-    const inventory = await this.inventoryRepo.findById(id);
+  // gets the inventory for a product
+  async getInventory(productId: string): Promise<IInventory> {
+    const inventory = await this.inventoryRepo.findOne({ product: productId });
     if (!inventory) {
       throw new NotFoundError('Inventory not found');
     }
@@ -41,15 +45,15 @@ export class InventoryService {
     // Using the paginate utility function
     const inventories = await this.inventoryRepo.findMany(query, limit, page);
     if (!inventories) {
-      throw new APIError('Failed to get inventories');
+      throw new UnprocessableEntityError('Failed to get inventories');
     }
     return inventories;
   }
 
-  async updateInventory(id: string, data: IInventory): Promise<IInventory> {
-    const inventory = await this.inventoryRepo.update(id, data);
+  async updateInventory(productId: string, data: IInventory): Promise<IInventory> {
+    const inventory = await this.inventoryRepo.updateOne({ product: productId }, data);
     if (!inventory) {
-      throw new APIError('Failed to update inventory');
+      throw new UnprocessableEntityError('Failed to update inventory');
     }
     return inventory;
   }
@@ -82,14 +86,6 @@ export class InventoryService {
     const updated = await this.inventoryRepo.update(inventory.id, inventory);
     if (!updated) {
       throw new APIError('Failed to update inventory');
-    }
-    return inventory;
-  }
-
-  async getInventoryByProductId(productId: string): Promise<IInventory> {
-    const inventory = await this.inventoryRepo.findOne({ product: productId });
-    if (!inventory) {
-      throw new NotFoundError('Inventory not found');
     }
     return inventory;
   }

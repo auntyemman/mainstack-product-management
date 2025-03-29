@@ -5,21 +5,23 @@ import { authUser } from '../../shared/middlewares/auth';
 import { adminRBAC } from '../../shared/middlewares/admin.RBAC';
 import { inventoryContainer } from './di/inventory.container';
 import { INVENTORY_TYPES } from './di/inventory.di';
+import { UserRepository } from '../../user_management/users/user.repository';
+import { USER_TYPES } from '../../user_management/users/di/user.types';
+import { userContainer } from '../../user_management/users/di/user.container';
 
+export const inventory: Router = Router();
 // Retrieve the singleton controller from the container
 const inventoryController = inventoryContainer.get(INVENTORY_TYPES.InventoryController);
-export const inventory: Router = Router();
-// Bind methods to the controller
-// const inventoryCont = bindMethods(new InventoryController());
-// Bind methods to the controller
 const inventoryCont = bindMethods(inventoryController) as InventoryController;
 
+// Pass userRepository into the middleware
+const userRepository = userContainer.get<UserRepository>(USER_TYPES.UserRepository);
+const authMiddleware = authUser(userRepository);
 
-// Routes definition for inventory
-inventory.post('/create', authUser, adminRBAC, inventoryCont.createInventory);
-inventory.get('/:id', authUser, adminRBAC, inventoryCont.getInventory);
-inventory.get('/product/:productId', authUser, adminRBAC, inventoryCont.getIventoryByProductId);
-inventory.put('/:id', authUser, adminRBAC, inventoryCont.updateInventory);
-inventory.put('/:id/quantity/add', authUser, adminRBAC, inventoryCont.addToProductQuantity);
-inventory.put('/:id/quantity/remove', authUser, adminRBAC, inventoryCont.removeFromProductQuantity);
-inventory.get('/', authUser, inventoryCont.getInventories);
+// Routes definition for inventory, a subdomain of the product service
+inventory.get('/inventory', authMiddleware, adminRBAC, inventoryCont.getInventories);
+inventory.post('/:productId/inventory', authMiddleware, adminRBAC, inventoryCont.createInventory);
+inventory.get('/:productId/inventory', authMiddleware, adminRBAC, inventoryCont.getInventory);
+inventory.put('/:productId/inventory', authMiddleware, adminRBAC, inventoryCont.updateInventory);
+// inventory.put('/:id/quantity/add', authMiddleware, adminRBAC, inventoryCont.addToProductQuantity);
+// inventory.put('/:id/quantity/remove', authMiddleware, adminRBAC, inventoryCont.removeFromProductQuantity);
