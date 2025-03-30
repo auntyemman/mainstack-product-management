@@ -1,5 +1,11 @@
 import { QueryOptions } from 'mongoose';
-import { APIError, BadRequestError, ConflictError, NotFoundError, UnprocessableEntityError } from '../../shared/utils/custom_error';
+import {
+  APIError,
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  UnprocessableEntityError,
+} from '../../shared/utils/custom_error';
 import { PaginationResult } from '../../shared/utils/pagination';
 import { IInventory } from './inventory.model';
 import { InventoryRepository } from './inventory.repository';
@@ -8,7 +14,10 @@ import { INVENTORY_TYPES } from './di/inventory.di';
 
 @injectable()
 export class InventoryService {
-  constructor(@inject(INVENTORY_TYPES.InventoryRepository) private readonly inventoryRepo: InventoryRepository) {
+  constructor(
+    @inject(INVENTORY_TYPES.InventoryRepository)
+    private readonly inventoryRepo: InventoryRepository,
+  ) {
     this.inventoryRepo = inventoryRepo;
   }
 
@@ -61,8 +70,8 @@ export class InventoryService {
     if (!inventory) {
       throw new NotFoundError('Inventory not found');
     }
-     // Check if quantity is negative (removal) and would result in stock going below zero
-     if (quantity < 0 && inventory.quantity + quantity < 0) {
+    // Check if quantity is negative (removal) and would result in stock going below zero
+    if (quantity < 0 && inventory.quantity + quantity < 0) {
       throw new BadRequestError('Insufficient stock unit');
     }
     // increase the product quantity

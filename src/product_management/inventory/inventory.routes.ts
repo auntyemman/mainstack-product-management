@@ -19,9 +19,34 @@ const userRepository = userContainer.get<UserRepository>(USER_TYPES.UserReposito
 const authMiddleware = authUser(userRepository);
 
 // Routes definition for inventory, a subdomain of the product service
-inventory.post('/products/:productId/inventory', authMiddleware, adminRBAC, inventoryCont.createInventory);
-inventory.get('/products/:productId/inventory', authMiddleware, adminRBAC, inventoryCont.getInventory);
-inventory.put('/products/:productId/inventory', authMiddleware, adminRBAC, inventoryCont.updateInventory);
-inventory.patch('/products/:productId/inventory', authMiddleware, adminRBAC, inventoryCont.updateQuantity);
-inventory.delete('/products/:productId/inventory', authMiddleware, adminRBAC, inventoryCont.deleteInventory);
+inventory.post(
+  '/products/:productId/inventory',
+  authMiddleware,
+  adminRBAC,
+  inventoryCont.createInventory,
+);
+inventory.get(
+  '/products/:productId/inventory',
+  authMiddleware,
+  adminRBAC,
+  inventoryCont.getInventory,
+);
+inventory.put(
+  '/products/:productId/inventory',
+  authMiddleware,
+  adminRBAC,
+  inventoryCont.updateInventory,
+);
+inventory.patch(
+  '/products/:productId/inventory',
+  authMiddleware,
+  adminRBAC,
+  inventoryCont.updateQuantity,
+);
+inventory.delete(
+  '/products/:productId/inventory',
+  authMiddleware,
+  adminRBAC,
+  inventoryCont.deleteInventory,
+);
 inventory.get('/inventories', authMiddleware, adminRBAC, inventoryCont.getInventories);

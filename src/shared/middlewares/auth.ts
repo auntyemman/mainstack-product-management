@@ -37,7 +37,9 @@ export const authUser =
           throw new NotAuthorizedError();
         }
 
-        const newAccessToken = createAccessToken({ sub: refreshTokenResult.decoded.sub} as JWTPayload);
+        const newAccessToken = createAccessToken({
+          sub: refreshTokenResult.decoded.sub,
+        } as JWTPayload);
         res.setHeader('Authorization', `Bearer ${newAccessToken}`);
 
         user = await userRepository.findById(refreshTokenResult.decoded?.sub);
@@ -54,7 +56,6 @@ export const authUser =
       next(err);
     }
   };
-
 
 // export const authUser = async (req: Request, res: Response, next: NextFunction) => {
 //   try {

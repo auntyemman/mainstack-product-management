@@ -6,6 +6,9 @@ import { EVENT_TYPES } from './event.di';
 const eventContainer = new Container();
 
 // Bind dependencies
-eventContainer.bind<EmitterService>(EVENT_TYPES.EmitterService).to(EmitterService).inSingletonScope();
+eventContainer
+  .bind<EmitterService>(EVENT_TYPES.EmitterService)
+  .to(EmitterService)
+  .inSingletonScope();
 
 export { eventContainer };

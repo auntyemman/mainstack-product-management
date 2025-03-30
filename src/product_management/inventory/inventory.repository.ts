@@ -25,7 +25,9 @@ export class InventoryRepository extends BaseRepository<IInventory> {
   }
 
   async updateOne(query: QueryOptions, data: Partial<IInventory>): Promise<IInventory> {
-    const update = await this.inventoryModel.findOneAndUpdate(query, data, { new: true, runValidators: true }).exec();
+    const update = await this.inventoryModel
+      .findOneAndUpdate(query, data, { new: true, runValidators: true })
+      .exec();
     if (!update) {
       throw new UnprocessableEntityError('Failed to update inventory');
     }

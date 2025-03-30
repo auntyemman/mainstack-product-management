@@ -7,7 +7,10 @@ import { EVENT_TYPES } from '../../shared/event_bus/di/event.di';
 // Event listeners for inventory service
 @injectable()
 export class InventoryEventListeners {
-  constructor(@inject(INVENTORY_TYPES.InventoryService) private readonly inventoryService: InventoryService, @inject(EVENT_TYPES.EmitterService) private readonly emitterService: EmitterService) {
+  constructor(
+    @inject(INVENTORY_TYPES.InventoryService) private readonly inventoryService: InventoryService,
+    @inject(EVENT_TYPES.EmitterService) private readonly emitterService: EmitterService,
+  ) {
     this.emitterService = emitterService;
     this.inventoryService = inventoryService;
     this.registerListeners();
@@ -39,7 +42,7 @@ export class InventoryEventListeners {
         await Promise.all([
           this.inventoryService.getInventory(productId),
           this.inventoryService.deleteInventory(productId),
-        ])
+        ]);
         return true; // Success
       } catch (error) {
         retryCount++;
@@ -60,7 +63,9 @@ export class InventoryEventListeners {
     try {
       const inventory = await this.inventoryService.getInventory(productId);
       if (inventory && inventory.quantity < 5) {
-        console.warn(`Stock is low for product ${productId}. Current quantity: ${inventory.quantity}`);
+        console.warn(
+          `Stock is low for product ${productId}. Current quantity: ${inventory.quantity}`,
+        );
         // TODO: trigger a notification or alert here
       }
       return true;
@@ -93,4 +98,3 @@ export class InventoryEventListeners {
   //   );
   // }
 }
-

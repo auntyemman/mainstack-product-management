@@ -17,7 +17,7 @@ export class AuthController {
     try {
       const validated = await validateRequest(SignUpDTO, req.body);
       const user = await this.authService.createUser(validated);
-      // testable typed response 
+      // testable typed response
       const response = successResponse(201, 'User registered successfully', user);
       return res.status(response.statusCode).json(response);
     } catch (error) {
@@ -48,8 +48,10 @@ export class AuthController {
     try {
       const refreshToken = req.cookies.refreshToken;
       const newAccessToken = await this.authService.refreshToken(refreshToken);
-      
-      const response = successResponse(201, 'New access token generated', { accessToken: newAccessToken });
+
+      const response = successResponse(201, 'New access token generated', {
+        accessToken: newAccessToken,
+      });
       return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);

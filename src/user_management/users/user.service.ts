@@ -1,7 +1,12 @@
 import { IUser } from './user.model';
 import { hashPassword, comparePasswords } from '../../shared/utils/password_hash';
 import { UserRepository } from './user.repository';
-import { APIError, BadRequestError, NotFoundError, UnprocessableEntityError } from '../../shared/utils/custom_error';
+import {
+  APIError,
+  BadRequestError,
+  NotFoundError,
+  UnprocessableEntityError,
+} from '../../shared/utils/custom_error';
 import crypto from 'crypto';
 import { inject, injectable } from 'inversify';
 import { USER_TYPES } from './di/user.types';
@@ -72,5 +77,4 @@ export class UserService {
   //   const user = await this.updateUser(userId, { publicKey: null, privateKey: null });
   //   return user;
   // }
-
 }

@@ -8,17 +8,23 @@ import { successResponse } from '../../shared/utils/api_response';
 
 @injectable()
 export class ProductController {
-  constructor(@inject(PRODUCT_TYPES.ProductService) private readonly productService: ProductService) {
+  constructor(
+    @inject(PRODUCT_TYPES.ProductService) private readonly productService: ProductService,
+  ) {
     this.productService = productService;
   }
-  async createProduct(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
-    const userId  = res.locals.user._id;
+  async createProduct(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<Response | unknown> {
+    const userId = res.locals.user._id;
     try {
       const payload = { ...req.body, createdBy: userId.toString() };
       const validated = await validateRequest(CreateProductDTO, payload);
       const product = await this.productService.createProduct(validated);
 
-      const response = successResponse(201, 'Product created successfully', product );
+      const response = successResponse(201, 'Product created successfully', product);
       return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
@@ -29,25 +35,33 @@ export class ProductController {
     try {
       const id = req.params.id;
       const product = await this.productService.getProduct(id);
-      const response = successResponse(200, 'Product fetched successfully', product );
+      const response = successResponse(200, 'Product fetched successfully', product);
       return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
   }
 
-  async publishProduct(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
+  async publishProduct(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<Response | unknown> {
     try {
       const id = req.params.id;
       const product = await this.productService.publishProduct(id);
-      const response = successResponse(200, 'Product published successfully', product );
+      const response = successResponse(200, 'Product published successfully', product);
       return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
   }
 
-  async deleteProduct(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
+  async deleteProduct(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<Response | unknown> {
     try {
       const id = req.params.id;
       const product = await this.productService.deleteProduct(id);
@@ -80,14 +94,18 @@ export class ProductController {
         query.createdBy = createdBy;
       }
       const products = await this.productService.getProducts(query, limit, page);
-      const response = successResponse(200, 'Products fetched successfully', products );
+      const response = successResponse(200, 'Products fetched successfully', products);
       return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
   }
 
-  async updateProduct(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
+  async updateProduct(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<Response | unknown> {
     try {
       const id = req.params.id;
       const validated = await validateRequest(UpdateProductDTO, req.body);

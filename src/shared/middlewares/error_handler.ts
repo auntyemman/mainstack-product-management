@@ -12,7 +12,6 @@ import {
 } from '../utils/custom_error';
 import { logger } from '../configs/logger';
 
-
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof CustomError) {
     return res.status(err.statusCode).send({ errors: err.serializeErrors() });

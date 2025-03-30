@@ -23,7 +23,7 @@ export class Server {
       inventoryContainer.get<InventoryEventListeners>(INVENTORY_TYPES.InventoryEventListeners);
       logger.info('Server started successfully.');
     } catch (error) {
-      console.log(error)
+      console.log(error);
       logger.error(error);
       process.exit(1);
     }

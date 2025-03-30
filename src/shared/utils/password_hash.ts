@@ -12,5 +12,5 @@ export async function hashPassword(password: string): Promise<string> {
 
 // Function to compare a password with its hash
 export async function comparePasswords(password: string, hashedPassword: string): Promise<boolean> {
-    return await argon2.verify(hashedPassword, password);
+  return await argon2.verify(hashedPassword, password);
 }

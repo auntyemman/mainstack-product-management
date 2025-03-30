@@ -8,22 +8,24 @@ import { successResponse } from '../../shared/utils/api_response';
 
 // Controller class for inventory service
 @injectable()
-export class InventoryController {;
-  constructor(@inject(INVENTORY_TYPES.InventoryService) private readonly inventoryService: InventoryService) {
+export class InventoryController {
+  constructor(
+    @inject(INVENTORY_TYPES.InventoryService) private readonly inventoryService: InventoryService,
+  ) {
     this.inventoryService = inventoryService;
   }
 
-  async createInventory(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<Response | void> {
+  async createInventory(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     const productId = req.params.productId;
     try {
       const data = req.body;
       const validated = await validateRequest(CreateInventoryDTO, data);
       const inventory = await this.inventoryService.createInventory(productId, validated);
-      const response = successResponse(201, `Inventory created successfully for product id ${productId}`, inventory);
+      const response = successResponse(
+        201,
+        `Inventory created successfully for product id ${productId}`,
+        inventory,
+      );
       return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
@@ -65,31 +67,47 @@ export class InventoryController {;
     next: NextFunction,
   ): Promise<Response | unknown> {
     try {
-      const productId = req.params.productId
+      const productId = req.params.productId;
       const { quantity } = await validateRequest(UpdateInventoryQuntityDTO, req.body);
       const inventory = await this.inventoryService.updateQuantity(productId, quantity);
-      const response = successResponse(200, `Inventory quantity updated by ${quantity} successfully`, inventory);
+      const response = successResponse(
+        200,
+        `Inventory quantity updated by ${quantity} successfully`,
+        inventory,
+      );
 
-      return res.status(response.statusCode).json(response)
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async getInventories(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
-    try {
-      const limit = parseInt(req.query.limit as string) || 10;
-      const page = parseInt(req.query.page as string) || 1;
-      const query: any = {};
-      const inventories = await this.inventoryService.getInventories(query, limit, page);
-      const response = successResponse(200, 'All products inventories fetched successfully', inventories);
       return res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
     }
   }
 
-  async deleteInventory(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
+  async getInventories(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<Response | unknown> {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+      const page = parseInt(req.query.page as string) || 1;
+      const query: any = {};
+      const inventories = await this.inventoryService.getInventories(query, limit, page);
+      const response = successResponse(
+        200,
+        'All products inventories fetched successfully',
+        inventories,
+      );
+      return res.status(response.statusCode).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deleteInventory(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<Response | unknown> {
     try {
       const productId = req.params.productId;
       const inventory = await this.inventoryService.deleteInventory(productId);

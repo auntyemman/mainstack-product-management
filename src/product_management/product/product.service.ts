@@ -1,6 +1,10 @@
 import { ProductRepository } from './product.repository';
 import { IProduct } from './product.model';
-import { ConflictError, NotFoundError, UnprocessableEntityError } from '../../shared/utils/custom_error';
+import {
+  ConflictError,
+  NotFoundError,
+  UnprocessableEntityError,
+} from '../../shared/utils/custom_error';
 import { QueryOptions } from 'mongoose';
 import { PaginationResult } from '../../shared/utils/pagination';
 import { inject, injectable } from 'inversify';
@@ -11,7 +15,10 @@ import { EmitterService } from '../../shared/event_bus/event_emitter';
 
 @injectable()
 export class ProductService {
-  constructor(@inject(EVENT_TYPES.EmitterService) private readonly eventEmitter: EmitterService, @inject(PRODUCT_TYPES.ProductRepository) private readonly productRepository: ProductRepository) {
+  constructor(
+    @inject(EVENT_TYPES.EmitterService) private readonly eventEmitter: EmitterService,
+    @inject(PRODUCT_TYPES.ProductRepository) private readonly productRepository: ProductRepository,
+  ) {
     this.eventEmitter = eventEmitter;
     this.productRepository = productRepository;
   }
@@ -37,7 +44,9 @@ export class ProductService {
   }
 
   async publishProduct(id: string): Promise<IProduct> {
-    const updatedProduct = await this.productRepository.update(id, { status: ProductStatus.published });
+    const updatedProduct = await this.productRepository.update(id, {
+      status: ProductStatus.published,
+    });
     if (!updatedProduct) {
       throw new UnprocessableEntityError('Failed to publish product');
     }

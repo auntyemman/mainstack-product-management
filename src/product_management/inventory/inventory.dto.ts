@@ -1,7 +1,6 @@
 import { IsString, IsNotEmpty, IsOptional, IsNumber, IsInt } from 'class-validator';
 
 export class CreateInventoryDTO {
-
   @IsNotEmpty()
   @IsNumber()
   quantity!: number;
@@ -11,7 +10,6 @@ export class CreateInventoryDTO {
   location!: string;
 }
 export class UpdateInventoryDTO {
-
   @IsOptional()
   @IsNumber()
   quantity?: number;

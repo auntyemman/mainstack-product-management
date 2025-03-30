@@ -1,11 +1,10 @@
-import { Container } from "inversify";
-import { AuthController } from "../auth.controller";
-import { AuthenticationService } from "../auth.service";
-import { UserService } from "../../users/user.service";
-import { UserRepository } from "../../users/user.repository";
-import { AUTH_TYPES } from "./auth.types";
-import { USER_TYPES } from "../../users/di/user.types";
-
+import { Container } from 'inversify';
+import { AuthController } from '../auth.controller';
+import { AuthenticationService } from '../auth.service';
+import { UserService } from '../../users/user.service';
+import { UserRepository } from '../../users/user.repository';
+import { AUTH_TYPES } from './auth.types';
+import { USER_TYPES } from '../../users/di/user.types';
 
 export const authContainer = new Container();
 

@@ -1,10 +1,8 @@
-
-import { injectable } from 'inversify'
+import { injectable } from 'inversify';
 
 @injectable()
 export class CachingService {
   private cache: Map<string, { value: any; expiresAt: number }> = new Map();
-
 
   set(key: string, value: any, ttl = 3600000): void {
     const expiresAt = Date.now() + ttl; // default to 1 hour if ttl not specified

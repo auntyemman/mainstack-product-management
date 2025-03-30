@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../../shared/configs';
-import { BadRequestError, NotFoundError } from '../../shared/utils/custom_error';;
+import { BadRequestError, NotFoundError } from '../../shared/utils/custom_error';
 import { UserRepository } from '../users/user.repository';
 import { IUser } from '../users/user.model';
 import { comparePasswords, hashPassword } from '../../shared/utils/password_hash';
@@ -51,5 +51,4 @@ export class AuthenticationService {
     const newAccessToken = createAccessToken({ sub: data.decoded.sub } as JWTPayload);
     return newAccessToken;
   }
-
 }

@@ -25,7 +25,11 @@ export class UserController {
     }
   }
 
-  async updateProfile(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
+  async updateProfile(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<Response | unknown> {
     const { _id } = res.locals.user.user;
     try {
       const validated = await validateRequest(UpdateDTO, req.body);
@@ -65,14 +69,14 @@ export class UserController {
   }
 
   async makeAdmin(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
-      const userId = req.params.id;
-      try {
-        const user = await this.userService.makeAdmin(userId);
-        const response = successResponse(200, 'User made an admin successfully', user);
-        return res.status(response.statusCode).json(response);
-      } catch (error) {
-        next(error);
-      }
+    const userId = req.params.id;
+    try {
+      const user = await this.userService.makeAdmin(userId);
+      const response = successResponse(200, 'User made an admin successfully', user);
+      return res.status(response.statusCode).json(response);
+    } catch (error) {
+      next(error);
+    }
   }
   // async generateKeys(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
   //   try {
@@ -125,5 +129,4 @@ export class UserController {
   //     next(error);
   //   }
   // }
-
 }

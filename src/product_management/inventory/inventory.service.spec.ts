@@ -157,9 +157,7 @@ describe('InventoryService', () => {
       // Mock repository methods
       inventoryRepository.findOne.mockResolvedValue(null);
 
-      await expect(inventoryService.updateQuantity('productId', 5)).rejects.toThrow(
-        NotFoundError,
-      );
+      await expect(inventoryService.updateQuantity('productId', 5)).rejects.toThrow(NotFoundError);
       expect(inventoryRepository.findOne).toHaveBeenCalledWith({ product: 'productId' });
     });
   });
