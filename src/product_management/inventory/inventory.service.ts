@@ -1,5 +1,5 @@
 import { QueryOptions } from 'mongoose';
-import { APIError, ConflictError, NotFoundError, UnprocessableEntityError } from '../../shared/utils/custom_error';
+import { APIError, BadRequestError, ConflictError, NotFoundError, UnprocessableEntityError } from '../../shared/utils/custom_error';
 import { PaginationResult } from '../../shared/utils/pagination';
 import { IInventory } from './inventory.model';
 import { InventoryRepository } from './inventory.repository';
@@ -58,42 +58,28 @@ export class InventoryService {
     return inventory;
   }
 
-  async addToProductQuantity(productId: string, quantity: number): Promise<IInventory> {
+  async updateQuantity(productId: string, quantity: number): Promise<IInventory> {
     const inventory = await this.inventoryRepo.findOne({ product: productId });
     if (!inventory) {
       throw new NotFoundError('Inventory not found');
+    }
+     // Check if quantity is negative (removal) and would result in stock going below zero
+     if (quantity < 0 && inventory.quantity + quantity < 0) {
+      throw new BadRequestError('Insufficient stock unit');
     }
     // increase the product quantity
     inventory.quantity += quantity;
     const updated = await this.inventoryRepo.update(inventory.id, inventory);
     if (!updated) {
-      throw new APIError('Failed to update inventory');
+      throw new UnprocessableEntityError('Failed to update inventory');
     }
     return inventory;
   }
 
-  async removeFromProductQuantity(productId: string, quantity: number): Promise<IInventory> {
-    const inventory = await this.inventoryRepo.findOne({ product: productId });
+  async deleteInventory(productId: string): Promise<IInventory> {
+    const inventory = await this.inventoryRepo.deleteOne({ product: productId });
     if (!inventory) {
-      throw new NotFoundError('Inventory not found');
-    }
-    if (inventory.quantity < quantity) {
-      throw new APIError('Insufficient stock unit');
-    }
-    // decrease the product quantity
-    inventory.quantity -= quantity;
-
-    const updated = await this.inventoryRepo.update(inventory.id, inventory);
-    if (!updated) {
-      throw new APIError('Failed to update inventory');
-    }
-    return inventory;
-  }
-
-  async deleteInventory(id: string): Promise<IInventory> {
-    const inventory = await this.inventoryRepo.delete(id);
-    if (!inventory) {
-      throw new APIError('Failed to delete inventory');
+      throw new UnprocessableEntityError('Failed to delete inventory');
     }
     return inventory;
   }

@@ -10,4 +10,4 @@ export const router: Router = Router();
 router.use('/auth', auth);
 router.use('/users', user);
 router.use('/products', product);
-router.use('/products', inventory); // product subdomain routes
+router.use('/', inventory); // product subdomain routes

@@ -1,4 +1,4 @@
-import { QueryOptions } from 'mongoose';
+import { FilterQuery, QueryOptions } from 'mongoose';
 import { BaseRepository } from '../../shared/database/base.repository';
 import { paginate, PaginationResult } from '../../shared/utils/pagination';
 import { IInventory, Inventory } from './inventory.model';
@@ -30,5 +30,13 @@ export class InventoryRepository extends BaseRepository<IInventory> {
       throw new UnprocessableEntityError('Failed to update inventory');
     }
     return update;
+  }
+
+  async deleteOne(query: FilterQuery<IInventory>): Promise<IInventory> {
+    const deleted = await this.inventoryModel.findOneAndDelete(query).exec();
+    if (!deleted) {
+      throw new UnprocessableEntityError('Failed to update inventory');
+    }
+    return deleted;
   }
 }

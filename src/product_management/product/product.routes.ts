@@ -10,7 +10,7 @@ import { userContainer } from '../../user_management/users/di/user.container';
 import { UserRepository } from '../../user_management/users/user.repository';
 import { USER_TYPES } from '../../user_management/users/di/user.types';
 import { productContainer } from './di/product.container';
-import { PRODUCT_TYPES } from './di/product.types';
+import { PRODUCT_TYPES } from './di/product.di';
 
 // di container
 const productController = productContainer.get<ProductController>(PRODUCT_TYPES.ProductController);
@@ -26,4 +26,4 @@ product.get('/:id', authMiddleware, productCont.getProduct);
 product.patch('/:id', authMiddleware, adminRBAC, productCont.publishProduct);
 product.delete('/:id', authMiddleware, adminRBAC, productCont.deleteProduct);
 product.get('/', authMiddleware, productCont.getProducts);
-product.put('/update/:id', authMiddleware, adminRBAC, productCont.updateProduct);
+product.put('/:id', authMiddleware, adminRBAC, productCont.updateProduct);

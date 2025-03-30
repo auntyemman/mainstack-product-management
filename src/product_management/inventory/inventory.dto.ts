@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, IsInt } from 'class-validator';
 
 export class CreateInventoryDTO {
 
@@ -22,11 +22,8 @@ export class UpdateInventoryDTO {
 }
 
 export class UpdateInventoryQuntityDTO {
-  @IsString()
-  @IsNotEmpty()
-  productId!: string;
-
   @IsNotEmpty()
   @IsNumber()
+  @IsInt()
   quantity!: number;
 }

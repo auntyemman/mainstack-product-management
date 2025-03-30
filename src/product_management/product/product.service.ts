@@ -4,7 +4,7 @@ import { APIError, BadRequestError, ConflictError, NotFoundError, UnprocessableE
 import { QueryOptions } from 'mongoose';
 import { PaginationResult } from '../../shared/utils/pagination';
 import { inject, injectable } from 'inversify';
-import { PRODUCT_TYPES } from './di/product.types';
+import { PRODUCT_TYPES } from './di/product.di';
 import { ProductStatus } from './product.dto';
 
 @injectable()
@@ -44,7 +44,7 @@ export class ProductService {
   async deleteProduct(id: string): Promise<IProduct> {
     const product = await this.productRepository.delete(id);
     if (!product) {
-      throw new UnprocessableEntityError('Failed to delete product');
+      throw new UnprocessableEntityError('Failed to delete product, could not find product');
     }
     return product;
   }

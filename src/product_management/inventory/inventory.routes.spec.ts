@@ -31,7 +31,7 @@ jest.mock('./inventory.controller', () => {
         updateInventory: jest.fn((req, res) =>
           res.status(200).json({ message: 'Inventory updated' }),
         ),
-        addToProductQuantity: jest.fn((req, res) =>
+        updateQuantity: jest.fn((req, res) =>
           res.status(200).json({ message: 'Quantity added' }),
         ),
         removeFromProductQuantity: jest.fn((req, res) =>

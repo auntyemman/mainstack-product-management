@@ -58,80 +58,44 @@ export class InventoryController {;
     }
   }
 
-  /**
-   * Adds a given quantity to an existing inventory
-   * @example
-   * curl -X PUT \
-   *   http://localhost:3000/api/v1/inventory/add/quantity \
-   *   -H 'Content-Type: application/json' \
-   *   -d '{"productId": "61c7c5c5f1e7f39d94937f2c","quantity": 10}'
-   * @param {Request} req - The express request object
-   * @param {Response} res - The express response object
-   * @param {NextFunction} next - The express next function
-   * @returns {Promise<object | unknown>} - The response object
-   */
-  async addToProductQuantity(
+  // adds a given quantity from an existing inventory
+  async updateQuantity(
     req: Request,
     res: Response,
     next: NextFunction,
-  ): Promise<object | unknown> {
+  ): Promise<Response | unknown> {
     try {
-      const { productId, quantity } = await validateRequest(UpdateInventoryQuntityDTO, req.body);
-      const inventory = await this.inventoryService.addToProductQuantity(productId, quantity);
-      return res.status(200).json({
-        status: 'success',
-        message: 'Inventory quantity added successfully',
-        data: { inventory },
-      });
+      const productId = req.params.productId
+      const { quantity } = await validateRequest(UpdateInventoryQuntityDTO, req.body);
+      const inventory = await this.inventoryService.updateQuantity(productId, quantity);
+      const response = successResponse(200, `Inventory quantity updated by ${quantity} successfully`, inventory);
+
+      return res.status(response.statusCode).json(response)
     } catch (error) {
       next(error);
     }
   }
 
-  /**
-   * Removes a given quantity from an existing inventory
-   * @example
-   * curl -X PUT \
-   *   http://localhost:3000/api/v1/inventory/remove/quantity \
-   *   -H 'Content-Type: application/json' \
-   *   -d '{"productId": "61c7c5c5f1e7f39d94937f2c","quantity": 10}'
-   * @param {Request} req - The express request object
-   * @param {Response} res - The express response object
-   * @param {NextFunction} next - The express next function
-   * @returns {Promise<object | unknown>} - The response object
-   */
-  async removeFromProductQuantity(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<object | unknown> {
+  async getInventories(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
     try {
-      const { productId, quantity } = await validateRequest(UpdateInventoryQuntityDTO, req.body);
-      const inventory = await this.inventoryService.removeFromProductQuantity(productId, quantity);
-      return res.status(200).json({
-        status: 'success',
-        message: 'Inventory quantity removed successfully',
-        data: { inventory },
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async getInventories(req: Request, res: Response, next: NextFunction): Promise<object | unknown> {
-    try {
-      // const limit = parseInt(req.query.limit as string) || 10;
-      // const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const page = parseInt(req.query.page as string) || 1;
       const query: any = {};
-      console.log(query);
-      // const inventories = await this.inventoryService.getInventories(query, limit, page);
-      return res.status(200).json({
-        status: 'success',
-        message: 'Inventories fetched successfully',
-        // data: { inventories },
-      });
+      const inventories = await this.inventoryService.getInventories(query, limit, page);
+      const response = successResponse(200, 'All products inventories fetched successfully', inventories);
+      return res.status(response.statusCode).json(response);
     } catch (error) {
-      console.log('controller error', error);
+      next(error);
+    }
+  }
+
+  async deleteInventory(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
+    try {
+      const productId = req.params.productId;
+      const inventory = await this.inventoryService.deleteInventory(productId);
+      const response = successResponse(200, 'Products inventory deleted successfully', inventory);
+      return res.status(response.statusCode).json(response);
+    } catch (error) {
       next(error);
     }
   }

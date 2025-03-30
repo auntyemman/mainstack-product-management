@@ -133,7 +133,7 @@ describe('InventoryService', () => {
     });
   });
 
-  describe('addToProductQuantity', () => {
+  describe('updateQuantity', () => {
     it('should add to product quantity successfully', async () => {
       const inventoryData: IInventory = {
         id: 'inventoryId',
@@ -146,7 +146,7 @@ describe('InventoryService', () => {
       inventoryRepository.findOne.mockResolvedValue(inventoryData);
       inventoryRepository.update.mockResolvedValue(updatedInventoryData);
 
-      const result = await inventoryService.addToProductQuantity('productId', 5);
+      const result = await inventoryService.updateQuantity('productId', 5);
 
       expect(result).toEqual(updatedInventoryData);
       expect(inventoryRepository.findOne).toHaveBeenCalledWith({ product: 'productId' });
@@ -157,7 +157,7 @@ describe('InventoryService', () => {
       // Mock repository methods
       inventoryRepository.findOne.mockResolvedValue(null);
 
-      await expect(inventoryService.addToProductQuantity('productId', 5)).rejects.toThrow(
+      await expect(inventoryService.updateQuantity('productId', 5)).rejects.toThrow(
         NotFoundError,
       );
       expect(inventoryRepository.findOne).toHaveBeenCalledWith({ product: 'productId' });

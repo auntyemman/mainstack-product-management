@@ -30,7 +30,8 @@ export class BaseRepository<T extends Document> {
   }
 
   async delete(id: string): Promise<T | null> {
-    return await this.model.findByIdAndDelete(id).exec();
+    const deleted = await this.model.findByIdAndDelete(id).exec();
+    return deleted;
   }
 }
 
