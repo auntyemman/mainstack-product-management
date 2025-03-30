@@ -3,7 +3,7 @@ import { AuthController } from './auth.controller';
 import { authUser } from '../../shared/middlewares/auth';
 import { bindMethods } from '../../shared/utils/bind_method';
 import { authContainer } from './di/auth.container';
-import { AUTH_TYPES } from './di/auth.types';
+import { AUTH_TYPES } from './di/auth.di';
 
 export const auth: Router = Router();
 

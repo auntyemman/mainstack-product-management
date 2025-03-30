@@ -5,6 +5,9 @@ import { PORT } from './shared/configs';
 import { inventoryContainer } from './product_management/inventory/di/inventory.container';
 import { INVENTORY_TYPES } from './product_management/inventory/di/inventory.di';
 import { InventoryEventListeners } from './product_management/inventory/inventory.event_listeners';
+import { notificationContainer } from './notifications/di/notification.container';
+import { NOTIFICATION_TYPES } from './notifications/di/notification.di';
+import { NotificationEventListeners } from './notifications/notification.event_listeners';
 
 export class Server {
   private readonly app;
@@ -21,9 +24,9 @@ export class Server {
       });
       // Ensure event listeners are initialized at app startup
       inventoryContainer.get<InventoryEventListeners>(INVENTORY_TYPES.InventoryEventListeners);
+      notificationContainer.get<NotificationEventListeners>(NOTIFICATION_TYPES.NotificationEventListeners);
       logger.info('Server started successfully.');
     } catch (error) {
-      console.log(error);
       logger.error(error);
       process.exit(1);
     }

@@ -1,7 +1,6 @@
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { BaseRepository } from '../../shared/database/base.repository';
 import { IUser, User } from './user.model';
-import { USER_TYPES } from './di/user.types';
 
 @injectable()
 export class UserRepository extends BaseRepository<IUser> {

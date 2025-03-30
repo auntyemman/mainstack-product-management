@@ -4,7 +4,7 @@ import { SignUpDTO, SignInDTO } from '../users/user.dto';
 import { AuthenticationService } from '../auth/auth.service';
 import { successResponse } from '../../shared/utils/api_response';
 import { inject, injectable } from 'inversify';
-import { AUTH_TYPES } from './di/auth.types';
+import { AUTH_TYPES } from './di/auth.di';
 
 @injectable()
 export class AuthController {

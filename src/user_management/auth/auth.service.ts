@@ -8,12 +8,14 @@ import { inject, injectable } from 'inversify';
 import { USER_TYPES } from '../users/di/user.types';
 import { createAccessToken, createRefreshToken, verifyJWT } from '../../shared/utils/jwt.util';
 import { JWTPayload } from './auth.dto';
+import { EVENT_TYPES } from '../../shared/event_bus/di/event.di';
+import { EmitterService } from '../../shared/event_bus/event_emitter';
 
 @injectable()
 export class AuthenticationService {
-  // private readonly userRepo;
-  constructor(@inject(USER_TYPES.UserRepository) private readonly userRepo: UserRepository) {
+  constructor(@inject(USER_TYPES.UserRepository) private readonly userRepo: UserRepository, @inject(EVENT_TYPES.EmitterService) private readonly emitterService: EmitterService){
     this.userRepo = userRepo;
+    this.emitterService = emitterService;
   }
   async createUser(data: IUser): Promise<IUser> {
     const user = await this.userRepo.findByEmail(data.email);
@@ -22,7 +24,9 @@ export class AuthenticationService {
     }
     const hashedPassword = await hashPassword(data.password);
     data.password = hashedPassword;
-    return await this.userRepo.create(data);
+    const newUser = await this.userRepo.create(data);
+    await this.emitterService.emitAsync('userRegistered', newUser.id);  // Emit an event when a user is created
+    return newUser;
   }
 
   async login(data: IUser): Promise<{ accessToken: string; refreshToken: string }> {
@@ -38,6 +42,7 @@ export class AuthenticationService {
     // Generate both access and refresh tokens
     const accessToken = createAccessToken({ sub: user._id } as JWTPayload);
     const refreshToken = createRefreshToken({ sub: user._id } as JWTPayload);
+    await this.emitterService.emitAsync('userLoggedIn', user.id);  // Emit an event when a user is created
     return { accessToken, refreshToken };
   }
 
