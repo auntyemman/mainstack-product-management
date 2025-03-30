@@ -42,9 +42,6 @@ export class AuthenticationService {
   }
 
   async refreshToken(refreshToken: string): Promise<string> {
-    if (!refreshToken) {
-      throw new BadRequestError('Refresh token not found');
-    }
     // Verify the refresh token
     const data = await verifyJWT(refreshToken);
     if (!data || !data.decoded) {

@@ -13,4 +13,4 @@ const userCont = bindMethods(authController) as AuthController;
 
 auth.post('/signup', userCont.signUp);
 auth.post('/login', userCont.login);
-auth.get('/refresh', authUser, userCont.refreshToken);
+auth.get('/refresh', userCont.refreshToken);

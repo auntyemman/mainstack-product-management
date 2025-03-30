@@ -1,14 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-
 import { validateRequest } from '../../shared/utils/request_validator';
-import { SignUpDTO, SignInDTO, UpdateDTO, UserRole, CreateAdminDTO } from '../users/user.dto';
+import { SignUpDTO, SignInDTO } from '../users/user.dto';
 import { AuthenticationService } from '../auth/auth.service';
-import { APIError, BadRequestError } from '../../shared/utils/custom_error';
-import crypto from 'crypto';
 import { successResponse } from '../../shared/utils/api_response';
 import { inject, injectable } from 'inversify';
-import { USER_TYPES } from '../users/di/user.types';
-import { createAccessToken, verifyJWT } from '../../shared/utils/jwt.util';
 import { AUTH_TYPES } from './di/auth.types';
 
 @injectable()
@@ -18,7 +13,7 @@ export class AuthController {
     this.authService = authService;
   }
 
-  async signUp(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+  async signUp(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
     try {
       const validated = await validateRequest(SignUpDTO, req.body);
       const user = await this.authService.createUser(validated);
@@ -30,7 +25,7 @@ export class AuthController {
     }
   }
 
-  async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+  async login(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
     try {
       const validated = await validateRequest(SignInDTO, req.body);
       const { accessToken, refreshToken } = await this.authService.login(validated);
@@ -49,7 +44,7 @@ export class AuthController {
     }
   }
 
-  async refreshToken(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+  async refreshToken(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
     try {
       const refreshToken = req.cookies.refreshToken;
       const newAccessToken = await this.authService.refreshToken(refreshToken);

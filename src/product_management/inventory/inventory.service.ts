@@ -6,13 +6,11 @@ import { InventoryRepository } from './inventory.repository';
 import { inject, injectable } from 'inversify';
 import { INVENTORY_TYPES } from './di/inventory.di';
 
-// Service layer class for Inventory where the business logic is implemented
 @injectable()
 export class InventoryService {
   constructor(@inject(INVENTORY_TYPES.InventoryRepository) private readonly inventoryRepo: InventoryRepository) {
     this.inventoryRepo = inventoryRepo;
   }
-
 
   async createInventory(productId: string, data: IInventory): Promise<IInventory> {
     // attach product id to inventory payload

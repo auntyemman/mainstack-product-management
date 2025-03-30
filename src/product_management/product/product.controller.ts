@@ -2,16 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import { CreateProductDTO, ProductStatusDTO, UpdateProductDTO } from './product.dto';
 import { validateRequest } from '../../shared/utils/request_validator';
 import { ProductService } from './product.service';
-import { EmitterService } from '../../shared/event_bus/event_emitter';
 import { inject, injectable } from 'inversify';
-import { EVENT_TYPES } from '../../shared/event_bus/di/event.di';
 import { PRODUCT_TYPES } from './di/product.di';
 import { successResponse } from '../../shared/utils/api_response';
 
 @injectable()
 export class ProductController {
-  constructor(@inject(EVENT_TYPES.EmitterService) private readonly eventEmitter: EmitterService, @inject(PRODUCT_TYPES.ProductService) private readonly productService: ProductService) {
-    this.eventEmitter = eventEmitter;
+  constructor(@inject(PRODUCT_TYPES.ProductService) private readonly productService: ProductService) {
     this.productService = productService;
   }
   async createProduct(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
@@ -53,16 +50,7 @@ export class ProductController {
   async deleteProduct(req: Request, res: Response, next: NextFunction): Promise<Response | unknown> {
     try {
       const id = req.params.id;
-
-      const listenersCount = this.eventEmitter.listenerCount('productDeleted');
-      console.log(`Number of productDeleted listeners: ${listenersCount}`);
-      const inventory = await this.eventEmitter.emitAsync('productDeleted', id);
-      console.log('After emitting event, response:', inventory);
       const product = await this.productService.deleteProduct(id);
-      // const [product, inventory] = await Promise.all([
-      //   this.eventEmitter.emitAsync('productDeleted', id),
-      //   this.productService.deleteProduct(id),
-      // ]);
       const response = successResponse(200, 'Product deleted successfully', product);
       return res.status(response.statusCode).json(response);
     } catch (error) {

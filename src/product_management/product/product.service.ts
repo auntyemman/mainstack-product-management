@@ -1,15 +1,18 @@
 import { ProductRepository } from './product.repository';
 import { IProduct } from './product.model';
-import { APIError, BadRequestError, ConflictError, NotFoundError, UnprocessableEntityError } from '../../shared/utils/custom_error';
+import { ConflictError, NotFoundError, UnprocessableEntityError } from '../../shared/utils/custom_error';
 import { QueryOptions } from 'mongoose';
 import { PaginationResult } from '../../shared/utils/pagination';
 import { inject, injectable } from 'inversify';
 import { PRODUCT_TYPES } from './di/product.di';
 import { ProductStatus } from './product.dto';
+import { EVENT_TYPES } from '../../shared/event_bus/di/event.di';
+import { EmitterService } from '../../shared/event_bus/event_emitter';
 
 @injectable()
 export class ProductService {
-  constructor(@inject(PRODUCT_TYPES.ProductRepository) private readonly productRepository: ProductRepository) {
+  constructor(@inject(EVENT_TYPES.EmitterService) private readonly eventEmitter: EmitterService, @inject(PRODUCT_TYPES.ProductRepository) private readonly productRepository: ProductRepository) {
+    this.eventEmitter = eventEmitter;
     this.productRepository = productRepository;
   }
 
@@ -20,7 +23,7 @@ export class ProductService {
     }
     const product = await this.productRepository.create(data);
     if (!product) {
-      throw new APIError('Failed to create product');
+      throw new UnprocessableEntityError('Failed to create product');
     }
     return product;
   }
@@ -42,9 +45,10 @@ export class ProductService {
   }
 
   async deleteProduct(id: string): Promise<IProduct> {
+    await this.eventEmitter.emitAsync('productDeleted', id);
     const product = await this.productRepository.delete(id);
     if (!product) {
-      throw new UnprocessableEntityError('Failed to delete product, could not find product');
+      throw new UnprocessableEntityError('Failed to delete product or could not find product');
     }
     return product;
   }
@@ -61,7 +65,7 @@ export class ProductService {
   async updateProduct(id: string, data: IProduct): Promise<IProduct> {
     const product = await this.productRepository.update(id, data);
     if (!product) {
-      throw new APIError('Failed to update product');
+      throw new UnprocessableEntityError('Failed to update product');
     }
     return product;
   }

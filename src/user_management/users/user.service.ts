@@ -1,7 +1,7 @@
 import { IUser } from './user.model';
 import { hashPassword, comparePasswords } from '../../shared/utils/password_hash';
 import { UserRepository } from './user.repository';
-import { APIError, BadRequestError, NotFoundError } from '../../shared/utils/custom_error';
+import { APIError, BadRequestError, NotFoundError, UnprocessableEntityError } from '../../shared/utils/custom_error';
 import crypto from 'crypto';
 import { inject, injectable } from 'inversify';
 import { USER_TYPES } from './di/user.types';
@@ -9,9 +9,24 @@ import { UserRole } from './user.dto';
 
 @injectable()
 export class UserService {
-  // private readonly userRepo;
   constructor(@inject(USER_TYPES.UserRepository) private readonly userRepo: UserRepository) {
     this.userRepo = userRepo;
+  }
+
+  async getUser(userId: string): Promise<IUser> {
+    const user = await this.userRepo.findById(userId);
+    if (!user) {
+      throw new NotFoundError('user not found');
+    }
+    return user;
+  }
+
+  async updateUser(userId: string, user: Partial<IUser>): Promise<IUser> {
+    const updatedUser = await this.userRepo.update(userId, user);
+    if (!updatedUser) {
+      throw new UnprocessableEntityError('error updating user');
+    }
+    return updatedUser;
   }
 
   async makeAdmin(userId: string): Promise<IUser> {
@@ -58,19 +73,4 @@ export class UserService {
   //   return user;
   // }
 
-  async getUser(userId: string): Promise<IUser> {
-    const user = await this.userRepo.findById(userId);
-    if (!user) {
-      throw new NotFoundError('user not found');
-    }
-    return user;
-  }
-
-  async updateUser(userId: string, user: Partial<IUser>): Promise<IUser> {
-    const updatedUser = await this.userRepo.update(userId, user);
-    if (!updatedUser) {
-      throw new APIError('error updating user');
-    }
-    return updatedUser;
-  }
 }

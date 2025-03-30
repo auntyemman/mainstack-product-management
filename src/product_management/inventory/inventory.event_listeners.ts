@@ -33,10 +33,13 @@ export class InventoryEventListeners {
     const maxRetries = 3;
     let retryCount = 0;
 
+    // retry mechanism for trancient error
     while (retryCount < maxRetries) {
       try {
-        const inventory = await this.inventoryService.getInventory(productId);
-        await this.inventoryService.deleteInventory(inventory.id);
+        await Promise.all([
+          this.inventoryService.getInventory(productId),
+          this.inventoryService.deleteInventory(productId),
+        ])
         return true; // Success
       } catch (error) {
         retryCount++;
@@ -44,6 +47,7 @@ export class InventoryEventListeners {
           return false; // Fail after retries
         }
         await new Promise((resolve) => setTimeout(resolve, 2000)); // Retry after 2s
+        console.log('failed to delete, retry count:', retryCount);
       }
     }
     return false;
