@@ -1,122 +1,75 @@
-import request from 'supertest';
-import { Container } from 'inversify';
+import 'reflect-metadata';
 import { NotificationEventListeners } from './notification.event_listeners';
 import { NotificationService } from './notification.service';
 import { EmitterService } from '../shared/event_bus/event_emitter';
 import { NOTIFICATION_TYPES } from './di/notification.di';
 import { EVENT_TYPES } from '../shared/event_bus/di/event.di';
-import { createApp } from '../app';
+import { Container } from 'inversify';
+import { logger } from '../shared/configs/logger';
 
-describe('Notification Event Listeners Integration Test', () => {
-  let container: Container;
+jest.mock('../shared/configs/logger');
+
+describe('NotificationEventListeners', () => {
   let notificationEventListeners: NotificationEventListeners;
-  let notificationService: NotificationService;
-  let emitterService: EmitterService;
-  let app: any;
-
-  beforeAll(async () => {
-    // Initialize the container and services
-    container = new Container();
-    notificationService = { 
-      sendUserNotification: jest.fn(),
-    } as unknown as NotificationService;
-
-    emitterService = { 
-      emit: jest.fn(),
-      on: jest.fn(),
-    } as unknown as EmitterService;
-
-    // Bind the services to the container
-    container.bind(NOTIFICATION_TYPES.NotificationService).toConstantValue(notificationService);
-    container.bind(EVENT_TYPES.EmitterService).toConstantValue(emitterService);
-
-    // Instantiate the event listeners
-    notificationEventListeners = container.get(NotificationEventListeners);
-
-    // Set up the app
-    app = await createApp();
-  });
+  let notificationServiceMock: jest.Mocked<NotificationService>;
+  let emitterServiceMock: jest.Mocked<EmitterService>;
 
   beforeEach(() => {
-    jest.clearAllMocks(); // Clear mocks before each test to avoid cross-test pollution
+    notificationServiceMock = {
+      sendUserNotification: jest.fn(),
+    } as unknown as jest.Mocked<NotificationService>;
+
+    emitterServiceMock = {
+      on: jest.fn(),
+    } as unknown as jest.Mocked<EmitterService>;
+
+    const container = new Container();
+    container.bind(NOTIFICATION_TYPES.NotificationService).toConstantValue(notificationServiceMock);
+    container.bind(EVENT_TYPES.EmitterService).toConstantValue(emitterServiceMock);
+
+    notificationEventListeners = new NotificationEventListeners(notificationServiceMock, emitterServiceMock);
   });
 
-  it('should handle userRegistered event and send a welcome notification', async () => {
-    const userId = 'user123';
-
-    // Mock successful notification service call
-    (notificationService.sendUserNotification as jest.Mock).mockResolvedValue({
-      userId,
-      message: 'Welcome! Your registration was successful.',
-      type: 'user.registration',
-    });
-
-    // Trigger the event via HTTP (simulate the 'userRegistered' event)
-    await request(app)
-      .post('/events/userRegistered') // Example route that triggers event
-      .send({ userId });
-
-    // Ensure the notificationService was called
-    expect(notificationService.sendUserNotification).toHaveBeenCalledWith(
-      userId,
-      'Welcome! Your registration was successful.',
-      'user.registration',
+  it('should register event listeners on instantiation', () => {
+    expect(emitterServiceMock.on).toHaveBeenCalledWith(
+      'userRegistered',
+      expect.any(Function)
+    );
+    expect(emitterServiceMock.on).toHaveBeenCalledWith(
+      'userLoggedIn',
+      expect.any(Function)
     );
   });
 
-  it('should retry sending notification up to 3 times if it fails', async () => {
+  it('should attempt to send notification when userRegistered event is emitted', async () => {
     const userId = 'user123';
+    const sendNotificationMock = jest.fn().mockResolvedValue({ id: 'notif1' });
+    notificationServiceMock.sendUserNotification = sendNotificationMock;
+    
+    const eventCall = emitterServiceMock.on.mock.calls.find(([event]) => event === 'userRegistered');
+    if (!eventCall) {
+    throw new Error("Event listener for 'userRegistered' was not registered.");
+    }
+    const callback = eventCall[1];
+    await callback(userId);
 
-    // Simulate a failed notification on the first attempt
-    (notificationService.sendUserNotification as jest.Mock)
-      .mockRejectedValueOnce(new Error('Failed to send notification')) // First attempt fails
-      .mockResolvedValue({ userId, message: 'Welcome! Your registration was successful.', type: 'user.registration' }); // Second attempt succeeds
-
-    // Trigger the event via HTTP
-    await request(app)
-      .post('/events/userRegistered')
-      .send({ userId });
-
-    // Ensure retry logic is invoked, meaning the sendUserNotification method is called twice
-    expect(notificationService.sendUserNotification).toHaveBeenCalledTimes(2); // First failed, then retry
+    expect(sendNotificationMock).toHaveBeenCalledWith(userId, 'Welcome! Your registration was successful.', 'user.registration');
   });
 
-  it('should handle userLoggedIn event and send a login notification', async () => {
-    const userId = 'user456';
+  it('should retry on failure and log error after max retries', async () => {
+    const userId = 'user123';
+    notificationServiceMock.sendUserNotification.mockRejectedValue(new Error('Test Error'));
+    
+    const eventCall = emitterServiceMock.on.mock.calls.find(([event]) => event === 'userRegistered');
+    if (!eventCall) {
+    throw new Error("Event listener for 'userRegistered' was not registered.");
+    }
 
-    // Mock successful notification service call
-    (notificationService.sendUserNotification as jest.Mock).mockResolvedValue({
-      userId,
-      message: 'You have successfully logged in.',
-      type: 'user.login',
-    });
+    const callback = eventCall[1];
+    const result = await callback(userId);
 
-    // Trigger the event via HTTP (simulate the 'userLoggedIn' event)
-    await request(app)
-      .post('/events/userLoggedIn') // Example route that triggers event
-      .send({ userId });
-
-    // Ensure the notificationService was called
-    expect(notificationService.sendUserNotification).toHaveBeenCalledWith(
-      userId,
-      'You have successfully logged in.',
-      'user.login',
-    );
-  });
-
-  it('should return null after retrying if notification sending fails 3 times', async () => {
-    const userId = 'user789';
-
-    // Simulate failing notification for 3 retries
-    (notificationService.sendUserNotification as jest.Mock)
-      .mockRejectedValue(new Error('Failed to send notification'));
-
-    // Trigger the event via HTTP
-    await request(app)
-      .post('/events/userRegistered')
-      .send({ userId });
-
-    // Ensure the sendUserNotification was retried 3 times and eventually failed
-    expect(notificationService.sendUserNotification).toHaveBeenCalledTimes(3);
+    expect(notificationServiceMock.sendUserNotification).toHaveBeenCalledTimes(3);
+    expect(logger.error).toHaveBeenCalledWith('Max retries reached. Operation failed.');
+    expect(result).toBeNull();
   });
 });

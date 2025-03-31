@@ -1,161 +1,368 @@
-import request from 'supertest';
-import { createApp } from '../../app';
+import { ProductController } from './product.controller';
 import { ProductService } from './product.service';
-import { PRODUCT_TYPES } from './di/product.di';
-import { productContainer } from './di/product.container';
-import { NotFoundError } from '../../shared/utils/custom_error';
-import { ProductStatus } from './product.dto';
+import { category, CreateProductDTO, tags, UpdateProductDTO } from './product.dto';
+import { validateRequest } from '../../shared/utils/request_validator';
+import { successResponse } from '../../shared/utils/api_response';
 import { Request, Response, NextFunction } from 'express';
+import { IProduct } from './product.model';
+import { PaginationResult } from '../../shared/utils/pagination';
 
-// Mock the User Repository and container
-const mockUserRepository = {
-  // Add any methods you need to mock
-  findById: jest.fn().mockResolvedValue({ _id: 'userId', role: 'admin' }),
-  findOne: jest.fn().mockResolvedValue({ _id: 'userId', role: 'admin' })
-};
+// Mock dependencies
+jest.mock('../../shared/utils/request_validator');
+jest.mock('../../shared/utils/api_response');
 
-const mockUserContainer = {
-  get: jest.fn().mockReturnValue(mockUserRepository)
-};
-
-// Mock the USER_TYPES
-const USER_TYPES = {
-  UserRepository: 'UserRepository'
-};
-
-// Mock the authentication middleware
-jest.mock('../../shared/middlewares/auth', () => ({
-  authUser: () => (req: Request, res: Response, next: NextFunction) => {
-    // Set user info on request object as middleware would do
-    res.locals.user = { id: 'userId', role: 'admin' };
-    next();
-  }
-}));
-
-// Mock user container
-jest.mock('../../container', () => ({
-  userContainer: mockUserContainer,
-  USER_TYPES
-}));
-
-// Mock admin RBAC middleware if you're using it
-jest.mock('../../shared/middlewares/admin.RBAC', () => (req: Request, res: Response, next: NextFunction) => next());
-
-jest.mock('./product.service'); // Mocking ProductService
-
-describe('ProductController Integration Tests', () => {
-  let app: any;
-  let productService: ProductService;
-
-  beforeAll(() => {
-    app = createApp();
-  });
+describe('ProductController', () => {
+  let productController: ProductController;
+  let productServiceMock: jest.Mocked<ProductService>;
+  let reqMock: Partial<Request>;
+  let resMock: Partial<Response>;
+  let nextMock: jest.MockedFunction<NextFunction>;
+  let jsonMock: jest.Mock;
+  let statusMock: jest.Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks(); // Clear mocks before each test
-    productService = productContainer.get<ProductService>(PRODUCT_TYPES.ProductService);
+    // Reset mocks
+    jest.clearAllMocks();
+    
+    // Setup mocks
+    productServiceMock = {
+      createProduct: jest.fn(),
+      getProduct: jest.fn(),
+      publishProduct: jest.fn(),
+      deleteProduct: jest.fn(),
+      getProducts: jest.fn(),
+      updateProduct: jest.fn()
+    } as unknown as jest.Mocked<ProductService>;
+
+    // Mock request, response, next
+    jsonMock = jest.fn().mockReturnValue({});
+    statusMock = jest.fn().mockReturnValue({ json: jsonMock });
+    
+    reqMock = {
+      body: {},
+      params: {},
+      query: {}
+    };
+    
+    resMock = {
+      status: statusMock,
+      locals: {
+        user: {
+          _id: 'user123'
+        }
+      }
+    };
+    
+    nextMock = jest.fn();
+    
+    // Mock success response
+    (successResponse as jest.Mock).mockImplementation((statusCode, message, data) => ({
+      statusCode,
+      message,
+      data,
+      success: true
+    }));
+
+    // Initialize controller with mocked service
+    productController = new ProductController(productServiceMock);
   });
 
-  afterAll(async () => {
-    if (app && app.close) {
-      await app.close();
-    }
+  describe('createProduct', () => {
+    it('should create a product successfully', async () => {
+      // Arrange
+      const productDto: CreateProductDTO = {
+        name: 'Test Product',
+        price: 100,
+        description: 'Test Description',
+        category: [category.electronics],
+        tags: [tags.smart]
+      };
+      
+      const createdProduct = {
+        id: 'prod123',
+        ...productDto,
+        createdBy: 'user123'
+      } as IProduct;
+      
+      reqMock.body = productDto;
+      
+      (validateRequest as jest.Mock).mockResolvedValue({
+        ...productDto,
+        createdBy: 'user123'
+      });
+      
+      productServiceMock.createProduct.mockResolvedValue(createdProduct);
+
+      // Act
+      await productController.createProduct(reqMock as Request, resMock as Response, nextMock);
+
+      // Assert
+      expect(validateRequest).toHaveBeenCalledWith(CreateProductDTO, {
+        ...productDto,
+        createdBy: 'user123'
+      });
+      expect(productServiceMock.createProduct).toHaveBeenCalledWith({
+        ...productDto,
+        createdBy: 'user123'
+      });
+      expect(successResponse).toHaveBeenCalledWith(201, 'Product created successfully', createdProduct);
+      expect(statusMock).toHaveBeenCalledWith(201);
+      expect(jsonMock).toHaveBeenCalled();
+    });
+
+    it('should handle errors and pass to next middleware', async () => {
+      // Arrange
+      const error = new Error('Validation failed');
+      (validateRequest as jest.Mock).mockRejectedValue(error);
+
+      // Act
+      await productController.createProduct(reqMock as Request, resMock as Response, nextMock);
+
+      // Assert
+      expect(nextMock).toHaveBeenCalledWith(error);
+    });
   });
 
-  it('should create a product', async () => {
-    const createProductPayload = { name: 'Test Product', price: 100, category: 'Electronics', tags: ['tag1', 'tag2'] };
-    const mockResponse = { ...createProductPayload, _id: '123', createdBy: 'userId' };
+  describe('getProduct', () => {
+    it('should fetch a product by id successfully', async () => {
+      // Arrange
+      const productId = 'prod123';
+      const product = {
+        id: productId,
+        name: 'Test Product',
+        price: 100
+      } as IProduct;
+      
+      reqMock.params = { id: productId };
+      productServiceMock.getProduct.mockResolvedValue(product);
 
-    (productService.createProduct as jest.Mock).mockResolvedValue(mockResponse);
+      // Act
+      await productController.getProduct(reqMock as Request, resMock as Response, nextMock);
 
-    const response = await request(app)
-      .post('/api/v1/products')
-      .set('Authorization', 'Bearer mock_token')
-      .send(createProductPayload);
+      // Assert
+      expect(productServiceMock.getProduct).toHaveBeenCalledWith(productId);
+      expect(successResponse).toHaveBeenCalledWith(200, 'Product fetched successfully', product);
+      expect(statusMock).toHaveBeenCalledWith(200);
+      expect(jsonMock).toHaveBeenCalled();
+    });
 
-    expect(response.status).toBe(201);
-    expect(response.body.data.name).toBe('Test Product');
-    expect(response.body.message).toBe('Product created successfully');
+    it('should handle errors when fetching product', async () => {
+      // Arrange
+      const error = new Error('Product not found');
+      reqMock.params = { id: 'nonexistent' };
+      productServiceMock.getProduct.mockRejectedValue(error);
+
+      // Act
+      await productController.getProduct(reqMock as Request, resMock as Response, nextMock);
+
+      // Assert
+      expect(nextMock).toHaveBeenCalledWith(error);
+    });
   });
 
-  it('should get a single product', async () => {
-    const mockProductData = { _id: '123', name: 'Samsung A22', price: 30000, category: ['smartphones'], tags: ['smart'] };
-    (productService.getProduct as jest.Mock).mockResolvedValue(mockProductData);
+  describe('publishProduct', () => {
+    it('should publish a product successfully', async () => {
+      // Arrange
+      const productId = 'prod123';
+      const publishedProduct = {
+        id: productId,
+        name: 'Test Product',
+        status: 'published'
+      } as IProduct;
+      
+      reqMock.params = { id: productId };
+      productServiceMock.publishProduct.mockResolvedValue(publishedProduct);
 
-    const response = await request(app)
-      .get('/api/v1/products/123')
-      .set('Authorization', 'Bearer mock_token');
+      // Act
+      await productController.publishProduct(reqMock as Request, resMock as Response, nextMock);
 
-    expect(response.status).toBe(200);
-    expect(response.body.data._id).toBe('123');
-    expect(response.body.message).toBe('Product fetched successfully');
+      // Assert
+      expect(productServiceMock.publishProduct).toHaveBeenCalledWith(productId);
+      expect(successResponse).toHaveBeenCalledWith(200, 'Product published successfully', publishedProduct);
+      expect(statusMock).toHaveBeenCalledWith(200);
+      expect(jsonMock).toHaveBeenCalled();
+    });
+
+    it('should handle errors when publishing product', async () => {
+      // Arrange
+      const error = new Error('Failed to publish product');
+      reqMock.params = { id: 'prod123' };
+      productServiceMock.publishProduct.mockRejectedValue(error);
+
+      // Act
+      await productController.publishProduct(reqMock as Request, resMock as Response, nextMock);
+
+      // Assert
+      expect(nextMock).toHaveBeenCalledWith(error);
+    });
   });
 
-  it('should update a product', async () => {
-    const updatedProductData = { name: 'Updated Product', price: 120 };
-    const mockUpdatedProduct = { ...updatedProductData, _id: '123' };
+  describe('deleteProduct', () => {
+    it('should delete a product successfully', async () => {
+      // Arrange
+      const productId = 'prod123';
+      const deletedProduct = {
+        id: productId,
+        name: 'Test Product',
+      } as IProduct;
+      
+      reqMock.params = { id: productId };
+      productServiceMock.deleteProduct.mockResolvedValue(deletedProduct);
 
-    (productService.updateProduct as jest.Mock).mockResolvedValue(mockUpdatedProduct);
+      // Act
+      await productController.deleteProduct(reqMock as Request, resMock as Response, nextMock);
 
-    const response = await request(app)
-      .put('/api/v1/products/123')
-      .set('Authorization', 'Bearer mock_token')
-      .send(updatedProductData);
+      // Assert
+      expect(productServiceMock.deleteProduct).toHaveBeenCalledWith(productId);
+      expect(successResponse).toHaveBeenCalledWith(200, 'Product deleted successfully', deletedProduct);
+      expect(statusMock).toHaveBeenCalledWith(200);
+      expect(jsonMock).toHaveBeenCalled();
+    });
 
-    expect(response.status).toBe(200);
-    expect(response.body.data.name).toBe('Updated Product');
-    expect(response.body.message).toBe('Product updated successfully');
+    it('should handle errors when deleting product', async () => {
+      // Arrange
+      const error = new Error('Failed to delete product');
+      reqMock.params = { id: 'prod123' };
+      productServiceMock.deleteProduct.mockRejectedValue(error);
+
+      // Act
+      await productController.deleteProduct(reqMock as Request, resMock as Response, nextMock);
+
+      // Assert
+      expect(nextMock).toHaveBeenCalledWith(error);
+    });
   });
 
-  it('should publish a product', async () => {
-    const mockProductData = { _id: '123', status: ProductStatus.published };
-    (productService.publishProduct as jest.Mock).mockResolvedValue(mockProductData);
+  describe('getProducts', () => {
+    it('should fetch products with default pagination', async () => {
+      // Arrange
+      const data = [
+        { id: 'prod1', name: 'Product 1' },
+        { id: 'prod2', name: 'Product 2' }
+      ];
+      const products = {
+        data: data,
+        totalItems: 2,
+        totalPages: 1,
+        currentPage: 1,
+        limit: 10
+      } as PaginationResult<IProduct>
+    //   const products = [
+    //     { id: 'prod1', name: 'Product 1' },
+    //     { id: 'prod2', name: 'Product 2' }
+    //   ] as PaginationResult<IProduct>;
+      
+      reqMock.query = {};
+      productServiceMock.getProducts.mockResolvedValue(products);
+      
 
-    const response = await request(app)
-      .patch('/api/v1/products/123')
-      .set('Authorization', 'Bearer mock_token');
+      // Act
+      await productController.getProducts(reqMock as Request, resMock as Response, nextMock);
 
-    expect(response.status).toBe(200);
-    expect(response.body.data.status).toBe(ProductStatus.published);
-    expect(response.body.message).toBe('Product published successfully');
+      // Assert
+      expect(productServiceMock.getProducts).toHaveBeenCalledWith({}, 10, 1);
+      expect(successResponse).toHaveBeenCalledWith(200, 'Products fetched successfully', products);
+      expect(statusMock).toHaveBeenCalledWith(200);
+      expect(jsonMock).toHaveBeenCalled();
+    });
+
+    it('should fetch products with specified filters and pagination', async () => {
+      // Arrange
+      const data = [
+        { id: 'prod1', name: 'Product 1' },
+        { id: 'prod2', name: 'Product 2' }
+      ];
+      const products = {
+        data: data,
+        totalItems: 2,
+        totalPages: 1,
+        currentPage: 1,
+        limit: 10
+      } as PaginationResult<IProduct>
+      
+      reqMock.query = {
+        limit: '5',
+        page: '2',
+        category: 'electronics',
+        tags: 'new',
+        name: 'Product',
+        status: 'active',
+        createdBy: 'user123'
+      };
+      
+      productServiceMock.getProducts.mockResolvedValue(products);
+
+      // Act
+      await productController.getProducts(reqMock as Request, resMock as Response, nextMock);
+
+      // Assert
+      expect(productServiceMock.getProducts).toHaveBeenCalledWith({
+        category: 'electronics',
+        tags: 'new',
+        name: 'Product',
+        status: 'active',
+        createdBy: 'user123'
+      }, 5, 2);
+      expect(successResponse).toHaveBeenCalledWith(200, 'Products fetched successfully', products);
+    });
+
+    it('should handle errors when fetching products', async () => {
+      // Arrange
+      const error = new Error('Database error');
+      productServiceMock.getProducts.mockRejectedValue(error);
+
+      // Act
+      await productController.getProducts(reqMock as Request, resMock as Response, nextMock);
+
+      // Assert
+      expect(nextMock).toHaveBeenCalledWith(error);
+    });
   });
 
-  it('should delete a product', async () => {
-    (productService.deleteProduct as jest.Mock).mockResolvedValue({ _id: '123' });
+  describe('updateProduct', () => {
+    it('should update a product successfully', async () => {
+      // Arrange
+      const productId = 'prod123';
+      const updateDto: UpdateProductDTO = {
+        name: 'Updated Product',
+        price: 150
+      };
+      
+      const updatedProduct = {
+        id: productId,
+        ...updateDto
+      } as IProduct;
+      
+      reqMock.params = { id: productId };
+      reqMock.body = updateDto;
+      
+      (validateRequest as jest.Mock).mockResolvedValue(updateDto);
+      productServiceMock.updateProduct.mockResolvedValue(updatedProduct);
 
-    const response = await request(app)
-      .delete('/api/v1/products/123')
-      .set('Authorization', 'Bearer mock_token');
+      // Act
+      await productController.updateProduct(reqMock as Request, resMock as Response, nextMock);
 
-    expect(response.status).toBe(200);
-    expect(response.body.message).toBe('Product deleted successfully');
-  });
+      // Assert
+      expect(validateRequest).toHaveBeenCalledWith(UpdateProductDTO, updateDto);
+      expect(productServiceMock.updateProduct).toHaveBeenCalledWith(productId, updateDto);
+      expect(successResponse).toHaveBeenCalledWith(200, 'Product updated successfully', updatedProduct);
+      expect(statusMock).toHaveBeenCalledWith(200);
+      expect(jsonMock).toHaveBeenCalled();
+    });
 
-  it('should return 404 if product not found', async () => {
-    (productService.getProduct as jest.Mock).mockRejectedValue(new NotFoundError('Product not found'));
+    it('should handle validation errors when updating product', async () => {
+      // Arrange
+      const error = new Error('Validation failed');
+      reqMock.params = { id: 'prod123' };
+      reqMock.body = { price: -100 }; // Invalid price
+      
+      (validateRequest as jest.Mock).mockRejectedValue(error);
 
-    const response = await request(app)
-      .get('/api/v1/products/123')
-      .set('Authorization', 'Bearer mock_token');
+      // Act
+      await productController.updateProduct(reqMock as Request, resMock as Response, nextMock);
 
-    expect(response.status).toBe(404);
-    expect(response.body.message).toBe('Product not found');
-  });
-
-  it('should return list of products', async () => {
-    const mockProducts = [
-      { _id: '123', name: 'Test Product', price: 100 },
-      { _id: '124', name: 'Another Product', price: 150 },
-    ];
-    (productService.getProducts as jest.Mock).mockResolvedValue({ data: mockProducts, total: mockProducts.length });
-
-    const response = await request(app)
-      .get('/api/v1/products')
-      .set('Authorization', 'Bearer mock_token')
-      .query({ page: 1, limit: 10 });
-
-    expect(response.status).toBe(200);
-    expect(response.body.data.length).toBeGreaterThan(0);
-    expect(response.body.message).toBe('Products fetched successfully');
+      // Assert
+      expect(nextMock).toHaveBeenCalledWith(error);
+    });
   });
 });

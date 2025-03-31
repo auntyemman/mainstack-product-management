@@ -54,11 +54,11 @@ export class CreateProductDTO {
 
   @IsOptional()
   @IsString()
-  status!: ProductStatus;
+  status?: ProductStatus;
 
   @IsOptional()
   @IsString()
-  createdBy!: string;
+  createdBy?: string;
 }
 
 export class UpdateProductDTO {

@@ -74,27 +74,4 @@ export class InventoryEventListeners {
     }
   }
 
-  // private productListeners(): void {
-  //   // actions with retry strategy
-  //   this.emitterService.on(
-  //     'productDeleted',
-  //     async (productId: string) => {
-  //       // retry mechanism for trancient error
-  //       const maxRetries = 3;
-  //       let retryCount = 0;
-  //       while (retryCount < maxRetries) {
-  //         try {
-  //           // const inventory = await this.inventoryService.getInventory(productId);
-  //           // await this.inventoryService.deleteInventory(inventory.id);
-  //           return true;
-  //         } catch (error) {
-  //           retryCount++;
-  //           await new Promise((resolve) => setTimeout(resolve, 2000)); // retries after 2 seconds;
-  //           return false;
-  //         }
-  //       }
-  //     },
-  //     // another product event listener if any
-  //   );
-  // }
 }

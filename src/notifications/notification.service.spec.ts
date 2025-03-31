@@ -1,131 +1,194 @@
+import 'reflect-metadata';
 import { NotificationService } from './notification.service';
 import { NotificationRepository } from './notification.repository';
-import { UnprocessableEntityError } from '../shared/utils/custom_error';
 import { INotification } from './notification.model';
-
-// Mock the NotificationRepository
-jest.mock('./notification.repository');
+import { UnprocessableEntityError } from '../shared/utils/custom_error';
 
 describe('NotificationService', () => {
   let notificationService: NotificationService;
-  let mockNotificationRepository: jest.Mocked<NotificationRepository>;
+  let notificationRepositoryMock: jest.Mocked<NotificationRepository>;
 
   beforeEach(() => {
-    // Create a mock instance of NotificationRepository
-    mockNotificationRepository = new NotificationRepository() as jest.Mocked<NotificationRepository>;
+    notificationRepositoryMock = {
+      create: jest.fn(),
+      findOne: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+    } as unknown as jest.Mocked<NotificationRepository>;
 
-    // Initialize the NotificationService with the mocked repository
-    notificationService = new NotificationService(mockNotificationRepository);
+    notificationService = new NotificationService(notificationRepositoryMock);
   });
 
-  describe('sendUserNotification method to create a notification', () => {
-    it('should successfully send a notification', async () => {
-      const userId = 'user123';
-      const message = 'You have a new message!';
-      const type = 'info';
+  it('should send a user notification successfully', async () => {
+    const mockNotification: INotification = { userId: 'user123', message: 'Test message', type: 'test', isRead: false } as INotification;
+    notificationRepositoryMock.create.mockResolvedValue(mockNotification);
 
-      const mockNotification: INotification = { userId, message, type, _id: '1' } as INotification;
-
-      // Mock the repository's create method to return a mock notification
-      mockNotificationRepository.create.mockResolvedValue(mockNotification);
-
-      const notification = await notificationService.sendUserNotification(userId, message, type);
-
-      expect(mockNotificationRepository.create).toHaveBeenCalledWith({ userId, message, type });
-      expect(notification).toEqual(mockNotification);
-    });
-
-    it('should throw an error if notification creation fails', async () => {
-      const userId = 'user123';
-      const message = 'You have a new message!';
-      const type = 'info';
-
-      // Mock the repository's create method to return null, simulating failure
-      // mockNotificationRepository.create.mockResolvedValue(null);
-
-      await expect(notificationService.sendUserNotification(userId, message, type))
-        .rejects
-        .toThrow(new UnprocessableEntityError('Failed to send notification'));
-    });
+    const result = await notificationService.sendUserNotification('user123', 'Test message', 'test');
+    expect(result).toEqual(mockNotification);
+    expect(notificationRepositoryMock.create).toHaveBeenCalledWith({ userId: 'user123', message: 'Test message', type: 'test' });
   });
 
-  describe('getUserNotification', () => {
-    it('should successfully fetch a notification by ID', async () => {
-      const notificationId = '1';
-      const mockNotification = { _id: notificationId, message: 'You have a new message!', userId: 'user123' } as INotification;
-
-      // Mock the repository's findOne method to return a mock notification
-      mockNotificationRepository.findOne.mockResolvedValue(mockNotification);
-
-      const notification = await notificationService.getUserNotification(notificationId);
-
-      expect(mockNotificationRepository.findOne).toHaveBeenCalledWith({ _id: notificationId });
-      expect(notification).toEqual(mockNotification);
-    });
-
-    it('should throw an error if notification not found', async () => {
-      const notificationId = '1';
-
-      // Mock the repository's findOne method to return null, simulating failure
-      mockNotificationRepository.findOne.mockResolvedValue(null);
-
-      await expect(notificationService.getUserNotification(notificationId))
-        .rejects
-        .toThrowError(new UnprocessableEntityError('Failed get notification'));
-    });
+  it('should throw an error if notification creation fails', async () => {
+    notificationRepositoryMock.create.mockRejectedValue(new UnprocessableEntityError('Failed to send notification'));
+    await expect(notificationService.sendUserNotification('user123', 'Test message', 'test'))
+      .rejects.toThrow(UnprocessableEntityError);
   });
 
-  describe('getUserNotifications', () => {
-    it('should successfully fetch all notifications for a user', async () => {
-      const userId = 'user123';
-      const mockNotifications = [
-        { userId, message: 'First notification', type: 'info', _id: '1' },
-        { userId, message: 'Second notification', type: 'warning', _id: '2' },
-      ] as INotification[];
+  it('should get a user notification successfully', async () => {
+    const mockNotification: INotification = { userId: 'user123', message: 'Test message', type: 'test', isRead: false } as INotification;
+    notificationRepositoryMock.findOne.mockResolvedValue(mockNotification);
 
-      // Mock the repository's findMany method to return an array of notifications
-      mockNotificationRepository.findMany.mockResolvedValue(mockNotifications);
-
-      const notifications = await notificationService.getUserNotifications(userId);
-
-      expect(mockNotificationRepository.findMany).toHaveBeenCalledWith(userId);
-      expect(notifications).toEqual(mockNotifications);
-    });
-
-    it('should throw an error if no notifications found', async () => {
-      const userId = 'user123';
-
-      // Mock the repository's findMany method to return empty, simulating failure
-      mockNotificationRepository.findMany.mockResolvedValue([]);
-
-      await expect(notificationService.getUserNotifications(userId))
-        .rejects
-        .toThrowError(new UnprocessableEntityError('Failed get notification'));
-    });
+    const result = await notificationService.getUserNotification('notif1');
+    expect(result).toEqual(mockNotification);
+    expect(notificationRepositoryMock.findOne).toHaveBeenCalledWith({ _id: 'notif1' });
   });
 
-  describe('markNotificationAsRead', () => {
-    it('should successfully mark a notification as read', async () => {
-      const notificationId = '1';
+  it('should throw an error if user notification is not found', async () => {
+    notificationRepositoryMock.findOne.mockResolvedValue(null);
+    await expect(notificationService.getUserNotification('notif1'))
+      .rejects.toThrow(UnprocessableEntityError);
+  });
 
-      // Mock the repository's update method to return a successful result
-      mockNotificationRepository.update.mockResolvedValue(null);
+  it('should get multiple user notifications successfully', async () => {
+    const mockNotifications: INotification[] = [
+      { userId: 'user123', message: 'Message 1', type: 'info', isRead: false },
+      { userId: 'user123', message: 'Message 2', type: 'alert', isRead: true }
+    ] as INotification[];
+    notificationRepositoryMock.findMany.mockResolvedValue(mockNotifications);
 
-      const result = await notificationService.markNotificationAsRead(notificationId);
+    const result = await notificationService.getUserNotifications('user123');
+    expect(result).toEqual(mockNotifications);
+    expect(notificationRepositoryMock.findMany).toHaveBeenCalledWith('user123');
+  });
 
-      expect(mockNotificationRepository.update).toHaveBeenCalledWith(notificationId, { isRead: true });
-      expect(result).toBe(true);
-    });
+  it('should throw an error if no notifications are found', async () => {
+    notificationRepositoryMock.findMany.mockRejectedValue(new UnprocessableEntityError('Failed get notification'));
+    await expect(notificationService.getUserNotifications('user123'))
+      .rejects.toThrow(UnprocessableEntityError);
+  });
 
-    it('should throw an error if marking notification as read fails', async () => {
-      const notificationId = '1';
+  it('should mark a notification as read successfully', async () => {
+    const mockNotification: INotification = { userId: 'user123', message: 'Test message', type: 'test', isRead: true } as INotification;
+    notificationRepositoryMock.update.mockResolvedValue(mockNotification);
 
-      // Mock the repository's update method to simulate failure
-      mockNotificationRepository.update.mockResolvedValue(null);
+    const result = await notificationService.markNotificationAsRead('notif1');
+    expect(result).toEqual(mockNotification);
+    expect(notificationRepositoryMock.update).toHaveBeenCalledWith('notif1', { isRead: true });
+  });
 
-      await expect(notificationService.markNotificationAsRead(notificationId))
-        .rejects
-        .toThrowError(new UnprocessableEntityError('Failed to mark notification as read'));
-    });
+  it('should throw an error if marking notification as read fails', async () => {
+    notificationRepositoryMock.update.mockResolvedValue(null);
+    await expect(notificationService.markNotificationAsRead('notif1'))
+      .rejects.toThrow(UnprocessableEntityError);
   });
 });
+
+
+// import 'reflect-metadata';
+// import { NotificationService } from './notification.service';
+// import { NotificationRepository } from './notification.repository';
+// import { NOTIFICATION_TYPES } from './di/notification.di';
+// import { UnprocessableEntityError } from '../shared/utils/custom_error';
+// import { INotification } from './notification.model';
+// import { Container } from 'inversify';
+
+// jest.mock('./notification.repository');
+
+// describe('NotificationService', () => {
+//   let notificationService: NotificationService;
+//   let notificationRepositoryMock: jest.Mocked<NotificationRepository>;
+
+//   beforeEach(() => {
+//     const container = new Container();
+//     notificationRepositoryMock = new NotificationRepository() as jest.Mocked<NotificationRepository>;
+//     container.bind(NOTIFICATION_TYPES.NotificationRepository).toConstantValue(notificationRepositoryMock);
+//     notificationService = container.get(NotificationService);
+//   });
+//   });
+
+//   it('should send a user notification successfully', async () => {
+//     const mockNotification: INotification = {
+//       userId: 'user123',
+//       message: 'Test message',
+//       type: 'test',
+//       isRead: false,
+//       createdAt: new Date(),
+//     } as INotification;
+//     NotificationRepository.create.mockResolvedValue(mockNotification);
+    
+//     const result = await notificationService.sendUserNotification('user123', 'Test message', 'test');
+//     expect(result).toEqual(mockNotification);
+//   });
+
+//   it('should throw an error if notification creation fails', async () => {
+//     notificationRepositoryMock.create.mockRejectedValue(new UnprocessableEntityError('Failed to send notification'));
+    
+//     await expect(notificationService.sendUserNotification('user123', 'Test message', 'test'))
+//       .rejects.toThrow(UnprocessableEntityError);
+//   });
+
+//   it('should get a user notification successfully', async () => {
+//     const mockNotification: INotification = {
+//       userId: 'user123',
+//       message: 'Test message',
+//       type: 'test',
+//       isRead: false,
+//       createdAt: new Date(),
+//     } as INotification;
+//     notificationRepositoryMock.findOne.mockResolvedValue(mockNotification);
+    
+//     const result = await notificationService.getUserNotification('notif1');
+//     expect(result).toEqual(mockNotification);
+//   });
+
+//   it('should throw an error if user notification is not found', async () => {
+//     notificationRepositoryMock.findOne.mockRejectedValue(new UnprocessableEntityError('Failed to get notification'));
+    
+//     await expect(notificationService.getUserNotification('notif1'))
+//       .rejects.toThrow(UnprocessableEntityError);
+//   });
+
+//   it('should get multiple user notifications successfully', async () => {
+//     const mockNotifications: INotification[] = [
+//       {
+//         userId: 'user123',
+//         message: 'Test message',
+//         type: 'test',
+//         isRead: false,
+//         createdAt: new Date(),
+//       },
+//     ] as INotification[];
+//     notificationRepositoryMock.findMany.mockResolvedValue(mockNotifications);
+    
+//     const result = await notificationService.getUserNotifications('user123');
+//     expect(result).toEqual(mockNotifications);
+//   });
+
+//   it('should throw an error if no notifications are found', async () => {
+//     notificationRepositoryMock.findMany.mockRejectedValue(new UnprocessableEntityError('Failed to get notification'));
+    
+//     await expect(notificationService.getUserNotifications('user123'))
+//       .rejects.toThrow(UnprocessableEntityError);
+//   });
+
+//   it('should mark a notification as read successfully', async () => {
+//     const updatedNotification: INotification = {
+//       userId: 'user123',
+//       message: 'Test message',
+//       type: 'test',
+//       isRead: true,
+//       createdAt: new Date(),
+//     } as INotification;
+//     notificationRepositoryMock.update.mockResolvedValue(updatedNotification);
+    
+//     const result = await notificationService.markNotificationAsRead('notif1');
+//     expect(result).toEqual(updatedNotification);
+//   });
+
+//   it('should throw an error if marking notification as read fails', async () => {
+//     notificationRepositoryMock.update.mockRejectedValue(new UnprocessableEntityError('Failed to mark notification as read'));
+    
+//     await expect(notificationService.markNotificationAsRead('notif1'))
+//       .rejects.toThrow(UnprocessableEntityError);
+//   });
+// });

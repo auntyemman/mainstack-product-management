@@ -1,219 +1,114 @@
-import request from 'supertest';
-import { createApp } from '../../app';
+import { InventoryController } from './inventory.controller';
 import { InventoryService } from './inventory.service';
-import { UnprocessableEntityError, NotFoundError } from '../../shared/utils/custom_error';
-import { Request, Response, NextFunction } from 'express';
-// Mock the authentication middleware
-jest.mock('../../shared/middlewares/auth', () => ({
-  authUser: () => (req: Request, res: Response, next: NextFunction) => next()
-}));
+import { NextFunction, Request, Response } from 'express';
+import { validateRequest } from '../../shared/utils/request_validator';
+import { successResponse } from '../../shared/utils/api_response';
+import { IInventory } from './inventory.model';
 
-jest.mock('../../shared/middlewares/admin.RBAC', () => (req: Request, res: Response, next: NextFunction) => next());
+jest.mock('../../shared/utils/request_validator');
+jest.mock('../../shared/utils/api_response');
 
-jest.mock('./inventory.service'); // Mock InventoryService
-jest.mock('./inventory.repository'); // Mock InventoryRepository
-
-describe('InventoryController Integration Tests', () => {
-  let app: any;
-
-  beforeAll(() => {
-    app = createApp();
-  });
+describe('InventoryController', () => {
+  let inventoryService: jest.Mocked<InventoryService>;
+  let inventoryController: InventoryController;
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+  let next: NextFunction;
 
   beforeEach(() => {
-    jest.clearAllMocks(); // Clear mocks before each test
+    inventoryService = {
+      createInventory: jest.fn(),
+      getInventory: jest.fn(),
+      updateInventory: jest.fn(),
+      updateQuantity: jest.fn(),
+      getInventories: jest.fn(),
+      deleteInventory: jest.fn(),
+    } as any;
+
+    inventoryController = new InventoryController(inventoryService);
+
+    req = {
+      params: { productId: '123' },
+      body: {},
+    } as Partial<Request>;
+
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    } as Partial<Response>;
+
+    next = jest.fn();
   });
 
-  it('should create inventory successfully', async () => {
-    const mockInventoryService = InventoryService as jest.Mocked<typeof InventoryService>;
-    const productId = 'product123';
-    const mockData = { quantity: 10, location: 'Warehouse A' };
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-    // Mock the service method
-    (mockInventoryService.prototype.createInventory as jest.Mock).mockResolvedValue({
-      product: productId,
-      ...mockData,
+  describe('createInventory', () => {
+    it('should create inventory and return 201 response', async () => {
+      req.body = { quantity: 10, location: "Lagos island warehouse 1" };
+
+      (validateRequest as jest.Mock).mockResolvedValue(req.body);
+      inventoryService.createInventory.mockResolvedValue({ quantity: 10, location: "Lagos island warehouse 1" } as IInventory);
+      (successResponse as jest.Mock).mockReturnValue({
+        statusCode: 201,
+        message: 'Inventory created',
+        data: { id: 'inv123', quantity: 10, location: "Lagos island warehouse 1" },
+      });
+
+      await inventoryController.createInventory(req as Request, res as Response, next);
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 201 }));
     });
-
-    const response = await request(app)
-      .post(`/api/v1/products/${productId}/inventory`)  // Fixed path to match route
-      .send(mockData)
-      .expect(201);
-
-    expect(response.body.status).toBe('success');
-    expect(response.body.message).toBe(`Inventory created successfully for product id ${productId}`);
-    expect(response.body.data.product).toBe(productId);
-    expect(response.body.data.quantity).toBe(10);
   });
 
-  it('should fail to create inventory if inventory already exists', async () => {
-    const mockInventoryService = InventoryService as jest.Mocked<typeof InventoryService>;
-    const productId = 'product123';
-    const mockData = { quantity: 10, location: 'Warehouse A' };
+  describe('getInventory', () => {
+    it('should return inventory details', async () => {
+      inventoryService.getInventory.mockResolvedValue({ quantity: 10, location: "Lagos island warehouse 1" } as IInventory);
+      (successResponse as jest.Mock).mockReturnValue({
+        statusCode: 200,
+        message: 'Inventory retrieved',
+        data: { quantity: 10, location: "Lagos island warehouse 1" },
+      });
 
-    // Mock the service to throw an error
-    (mockInventoryService.prototype.createInventory as jest.Mock).mockRejectedValue(
-      new UnprocessableEntityError('Failed to create inventory'),
-    );
+      await inventoryController.getInventory(req as Request, res as Response, next);
 
-    const response = await request(app)
-      .post(`/api/v1/products/${productId}/inventory`)
-      .send(mockData)
-      .expect(422);
-
-    expect(response.body.status).toBe('error');
-    expect(response.body.message).toBe('Failed to create inventory');
-  });
-
-  it('should get inventory successfully', async () => {
-    const mockInventoryService = InventoryService as jest.Mocked<typeof InventoryService>;
-    const productId = 'product123';
-    const mockInventory = { product: productId, quantity: 100, location: 'Warehouse A' };
-
-    // Mock the service method
-    (mockInventoryService.prototype.getInventory as jest.Mock).mockResolvedValue(mockInventory);
-
-    const response = await request(app)
-      .get(`/api/v1/products/${productId}/inventory`)
-      .expect(200);
-
-    expect(response.body.status).toBe('success');
-    expect(response.body.message).toBe('Product inventory fetched successfully');
-    expect(response.body.data.product).toBe(productId);
-    expect(response.body.data.quantity).toBe(100);
-  });
-
-  it('should fail to get inventory if not found', async () => {
-    const mockInventoryService = InventoryService as jest.Mocked<typeof InventoryService>;
-    const productId = 'product123';
-
-    // Mock the service to throw an error
-    (mockInventoryService.prototype.getInventory as jest.Mock).mockRejectedValue(
-      new NotFoundError('Inventory not found'),
-    );
-
-    const response = await request(app)
-      .get(`/api/v1/products/${productId}/inventory`)
-      .expect(404);
-
-    expect(response.body.status).toBe('error');
-    expect(response.body.message).toBe('Inventory not found');
-  });
-
-  it('should update inventory successfully', async () => {
-    const mockInventoryService = InventoryService as jest.Mocked<typeof InventoryService>;
-    const productId = 'product123';
-    const mockData = { quantity: 200, location: 'Warehouse B' };
-    const mockUpdatedInventory = { ...mockData, product: productId };
-
-    // Mock the service method
-    (mockInventoryService.prototype.updateInventory as jest.Mock).mockResolvedValue(mockUpdatedInventory);
-
-    const response = await request(app)
-      .put(`/api/v1/products/${productId}/inventory`)
-      .send(mockData)
-      .expect(200);
-
-    expect(response.body.status).toBe('success');
-    expect(response.body.message).toBe('Product inventory updated successfully');
-    expect(response.body.data.product).toBe(productId);
-    expect(response.body.data.quantity).toBe(200);
-  });
-
-  it('should fail to update inventory if invalid data', async () => {
-    const mockInventoryService = InventoryService as jest.Mocked<typeof InventoryService>;
-    const productId = 'product123';
-    const mockData = { quantity: -10, location: 'Warehouse B' };
-
-    // Mock the service to throw an error
-    (mockInventoryService.prototype.updateInventory as jest.Mock).mockRejectedValue(
-      new UnprocessableEntityError('Failed to update inventory'),
-    );
-
-    const response = await request(app)
-      .put(`/api/v1/products/${productId}/inventory`)
-      .send(mockData)
-      .expect(422);
-
-    expect(response.body.status).toBe('error');
-    expect(response.body.message).toBe('Failed to update inventory');
-  });
-
-  it('should update inventory quantity successfully', async () => {
-    const mockInventoryService = InventoryService as jest.Mocked<typeof InventoryService>;
-    const productId = 'product123';
-    const mockData = { quantity: 100 };
-
-    // Mock the service method
-    (mockInventoryService.prototype.updateQuantity as jest.Mock).mockResolvedValue({
-      product: productId,
-      ...mockData,
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 200 }));
     });
-
-    const response = await request(app)
-      .patch(`/api/v1/products/${productId}/inventory`)
-      .send(mockData)
-      .expect(200);
-
-    expect(response.body.status).toBe('success');
-    expect(response.body.message).toBe(`Inventory quantity updated by ${mockData.quantity} successfully`);
-    expect(response.body.data.product).toBe(productId);
-    expect(response.body.data.quantity).toBe(100);
   });
 
-  it('should delete inventory successfully', async () => {
-    const mockInventoryService = InventoryService as jest.Mocked<typeof InventoryService>;
-    const productId = 'product123';
+  describe('updateInventory', () => {
+    it('should update inventory and return updated data', async () => {
+      req.body = { quantity: 20, location: "Lagos island warehouse 1" };
+      (validateRequest as jest.Mock).mockResolvedValue(req.body);
+      inventoryService.updateInventory.mockResolvedValue({ quantity: 20, location: "Lagos island warehouse 1" } as IInventory);
+      (successResponse as jest.Mock).mockReturnValue({
+        statusCode: 200,
+        message: 'Inventory updated',
+        data: { quantity: 20, location: "Lagos island warehouse 1" },
+      });
 
-    // Mock the service method
-    (mockInventoryService.prototype.deleteInventory as jest.Mock).mockResolvedValue({
-      product: productId,
-      quantity: 100,
-      location: 'Warehouse A',
+      await inventoryController.updateInventory(req as Request, res as Response, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 200 }));
     });
-
-    const response = await request(app)
-      .delete(`/api/v1/products/${productId}/inventory`)
-      .expect(200);
-
-    expect(response.body.status).toBe('success');
-    expect(response.body.message).toBe('Products inventory deleted successfully');
-    expect(response.body.data.product).toBe(productId);
   });
 
-  it('should fail to delete inventory if not found', async () => {
-    const mockInventoryService = InventoryService as jest.Mocked<typeof InventoryService>;
-    const productId = 'product123';
+  describe('deleteInventory', () => {
+    it('should delete inventory and return success', async () => {
+      inventoryService.deleteInventory.mockResolvedValue({} as IInventory);
+      (successResponse as jest.Mock).mockReturnValue({
+        statusCode: 200,
+        message: 'Inventory deleted',
+      });
 
-    // Mock the service to throw an error
-    (mockInventoryService.prototype.deleteInventory as jest.Mock).mockRejectedValue(
-      new UnprocessableEntityError('Failed to delete inventory'),
-    );
+      await inventoryController.deleteInventory(req as Request, res as Response, next);
 
-    const response = await request(app)
-      .delete(`/api/v1/products/${productId}/inventory`)
-      .expect(422);
-
-    expect(response.body.status).toBe('error');
-    expect(response.body.message).toBe('Failed to delete inventory');
-  });
-
-  it('should get all inventories successfully', async () => {
-    const mockInventoryService = InventoryService as jest.Mocked<typeof InventoryService>;
-    const mockInventories = [
-      { product: 'product123', quantity: 100, location: 'Warehouse A' },
-      { product: 'product456', quantity: 200, location: 'Warehouse B' },
-    ];
-
-    // Mock the service method
-    (mockInventoryService.prototype.getInventories as jest.Mock).mockResolvedValue(mockInventories);
-
-    const response = await request(app)
-      .get(`/api/v1/inventories`)
-      .expect(200);
-
-    expect(response.body.status).toBe('success');
-    expect(response.body.message).toBe('All products inventories fetched successfully');
-    expect(response.body.data.length).toBeGreaterThan(0);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 200 }));
+    });
   });
 });

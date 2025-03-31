@@ -1,118 +1,88 @@
-import request from 'supertest';
-import { Container } from 'inversify';
+import 'reflect-metadata';
+import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
 import { NOTIFICATION_TYPES } from './di/notification.di';
-import { createApp } from '../app';
-import { Request, Response, NextFunction } from 'express';
+import { successResponse } from '../shared/utils/api_response';
+import { NextFunction, Request, Response } from 'express';
+import { Container } from 'inversify';
 
-describe('NotificationController Integration Test', () => {
-  let container: Container;
-  let notificationService: NotificationService;
-  let app: any;
+jest.mock('../shared/utils/api_response');
 
-  beforeAll(async () => {
-    // Initialize the container and services
-    container = new Container();
-    notificationService = { 
-      getUserNotifications: jest.fn(),
-      markNotificationAsRead: jest.fn(),
-    } as unknown as NotificationService;
-
-    // Bind the services to the container
-    // container.bind(NOTIFICATION_TYPES.NotificationService).toConstantValue(notificationService);
-
-    // Set up the app
-    app = createApp();
-  });
+describe('NotificationController', () => {
+  let notificationController: NotificationController;
+  let notificationServiceMock: jest.Mocked<NotificationService>;
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+  let next: NextFunction;
 
   beforeEach(() => {
-    jest.clearAllMocks(); // Clear mocks before each test to avoid cross-test pollution
+    notificationServiceMock = {
+      getUserNotifications: jest.fn(),
+      markNotificationAsRead: jest.fn(),
+    } as unknown as jest.Mocked<NotificationService>;
+
+    const container = new Container();
+    container.bind(NOTIFICATION_TYPES.NotificationService).toConstantValue(notificationServiceMock);
+
+    notificationController = new NotificationController(notificationServiceMock);
+
+    req = {};
+    res = {
+      locals: { user: { _id: 'user123' } },
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    next = jest.fn();
   });
 
-  describe('GET /', () => {
+  describe('getUserNotifications', () => {
     it('should return user notifications successfully', async () => {
-      const user = { _id: 'user123' }; // Mocked user data
-      const notifications = [
-        { id: '1', message: 'Welcome to the app!' },
-        { id: '2', message: 'You have a new message.' }
-      ];
+      const mockNotifications = [{ id: 'notif1', message: 'New message' }];
+      (notificationServiceMock.getUserNotifications as jest.Mock).mockResolvedValue(mockNotifications);
+      (successResponse as jest.Mock).mockReturnValue({ statusCode: 200, data: mockNotifications });
 
-      // Mock the notification service to return notifications
-      (notificationService.getUserNotifications as jest.Mock).mockResolvedValue(notifications);
+      await notificationController.getUserNotifications(req as Request, res as Response, next);
 
-      // Mock authMiddleware to simulate a logged-in user
-      app.use((req: Request, res: Response, next: NextFunction) => {
-        res.locals.user = user;
-        next();
-      });
-
-      const response = await request(app).get('/').set('Authorization', 'Bearer token');
-
-      // Assert status and response
-      expect(response.status).toBe(200);
-      expect(response.body.statusCode).toBe(200);
-      expect(response.body.data).toEqual(notifications);
-      expect(notificationService.getUserNotifications).toHaveBeenCalledWith(user._id.toString());
+      expect(notificationServiceMock.getUserNotifications).toHaveBeenCalledWith('user123');
+      expect(successResponse).toHaveBeenCalledWith(200, 'User notifications fetched successfully', mockNotifications);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ statusCode: 200, data: mockNotifications });
     });
 
-    it('should handle errors and return 500 if notification service fails', async () => {
-      const user = { _id: 'user123' }; // Mocked user data
+    it('should pass errors to next if service fails', async () => {
+      const error = new Error('Service error');
+      (notificationServiceMock.getUserNotifications as jest.Mock).mockRejectedValue(error);
 
-      // Mock the notification service to throw an error
-      (notificationService.getUserNotifications as jest.Mock).mockRejectedValue(new Error('Error fetching notifications'));
+      await notificationController.getUserNotifications(req as Request, res as Response, next);
 
-      // Mock authMiddleware to simulate a logged-in user
-      app.use((req: Request, res: Response, next: NextFunction) => {
-        res.locals.user = user;
-        next();
-      });
-
-      const response = await request(app).get('/').set('Authorization', 'Bearer token');
-
-      // Assert status and response
-      expect(response.status).toBe(500);
-      expect(response.body.message).toBe('Internal Server Error');
+      expect(next).toHaveBeenCalledWith(error);
     });
   });
 
-  describe('PATCH /:notificationId', () => {
-    it('should mark notification as read successfully', async () => {
-      const notificationId = '1';
-      const successResponse = { success: true };
-
-      // Mock the notification service to mark as read
-      (notificationService.markNotificationAsRead as jest.Mock).mockResolvedValue(successResponse);
-
-      // Mock authMiddleware (assuming this is done elsewhere)
-      app.use((req: Request, res: Response, next: NextFunction) => {
-        next();
-      });
-
-      const response = await request(app).patch(`/${notificationId}`).set('Authorization', 'Bearer token');
-
-      // Assert status and response
-      expect(response.status).toBe(200);
-      expect(response.body.statusCode).toBe(200);
-      expect(response.body.data.success).toBe(true);
-      expect(notificationService.markNotificationAsRead).toHaveBeenCalledWith(notificationId);
+  describe('markNotificationAsRead', () => {
+    beforeEach(() => {
+      req = { params: { notificationId: 'notif1' } };
     });
 
-    it('should handle errors and return 500 if marking notification as read fails', async () => {
-      const notificationId = '1';
+    it('should mark a notification as read successfully', async () => {
+      (notificationServiceMock.markNotificationAsRead as jest.Mock).mockResolvedValue(true);
+      (successResponse as jest.Mock).mockReturnValue({ statusCode: 200, data: { success: true } });
 
-      // Mock the notification service to throw an error
-      (notificationService.markNotificationAsRead as jest.Mock).mockRejectedValue(new Error('Error marking notification as read'));
+      await notificationController.markNotificationAsRead(req as Request, res as Response, next);
 
-      // Mock authMiddleware (assuming this is done elsewhere)
-      app.use((req: Request, res: Response, next: NextFunction) => {
-        next();
-      });
+      expect(notificationServiceMock.markNotificationAsRead).toHaveBeenCalledWith('notif1');
+      expect(successResponse).toHaveBeenCalledWith(200, 'Notification marked as read', { success: true });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ statusCode: 200, data: { success: true } });
+    });
 
-      const response = await request(app).patch(`/${notificationId}`).set('Authorization', 'Bearer token');
+    it('should pass errors to next if service fails', async () => {
+      const error = new Error('Service failure');
+      (notificationServiceMock.markNotificationAsRead as jest.Mock).mockRejectedValue(error);
 
-      // Assert status and response
-      expect(response.status).toBe(500);
-      expect(response.body.message).toBe('Internal Server Error');
+      await notificationController.markNotificationAsRead(req as Request, res as Response, next);
+
+      expect(next).toHaveBeenCalledWith(error);
     });
   });
 });

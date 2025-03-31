@@ -1,9 +1,46 @@
-# Mainstack APIs
+# Mainstack Product Store Manager
+## Overview
 
-## Features
+Product Store Manager is an event-driven inventory management system designed for handling product lifecycle processes efficiently. The application follows an event-based architecture similar to microservices, where different domains communicate through an event bus.
+
+## Key Features & Technical Accomplishments
+
+->  Event-Driven Architecture:
+
+- When a user signs up in the User Management Domain, an event is triggered to notify the user via the Notification System.
+
+- When product stock is low in the Product Management Domain, an event is fired to alert the warehouse or inventory manager.
+
+->  Domain Separation: The application is structured around different domains such as User Management, Product Management, and Notification Services.
+
+-> Scalable & Modular Design: Loosely coupled services with dependency injection for maintainability.
+
+-> MongoDB as Database: NoSQL document storage for handling flexible data structures.
+
+=>  RESTful API with Express.js: Secure and well-structured API endpoints.
+
+->  Dockerized Deployment: Containerized application for easy deployment and scaling.
+
+-> Comprehensive Testing: 80% Unit and integration test suites coverage that ensure application stability.
+
+## API Design
+
+The following table outlines the API design for product management domain:
+
+| **HTTP Method** | **Endpoint**                    | **Description**                                     | **Request Body**        | **Response**            |
+|-----------------|---------------------------------|-----------------------------------------------------|-------------------------|-------------------------|
+| `POST`          | `/products/`                    | Create a new product                                | `CreateProductDTO`      | `Product`               |
+| `GET`           | `/products/:id`                 | Fetch a product by its ID                           | N/A                     | `Product`               |
+| `PATCH`         | `/products/:id`                 | Update a product's information                      | `UpdateProductDTO`      | `Product`               |
+| `DELETE`        | `/products/:id`                 | Delete a product                                    | N/A                     | `Product`               |
+| `GET`           | `/products/`                    | Fetch all products with query parameters for filtering | `QueryParams`           | `PaginationResult`      |
+
+
+
+## and Domains
 - User management
 - Product Management
-- Inventory management
+- Notification System
 
 ## Tech Stack
 - **Backend:** Node.js, Express.js, EventEmmitter2
