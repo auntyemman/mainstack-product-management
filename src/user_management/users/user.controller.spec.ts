@@ -1,178 +1,102 @@
-import { UserController } from './user.controller';
+import request from 'supertest';
+import { createApp } from '../../app';
+import { userContainer } from './di/user.container';
+import { USER_TYPES } from './di/user.types';
 import { UserService } from './user.service';
-import { AuthenticationService } from '../auth/auth.service';
-import { validateRequest } from '../../shared/utils/request_validator';
-import { SignUpDTO, SignInDTO, CreateAdminDTO, UpdateDTO } from './user.dto';
-import { Request, Response, NextFunction } from 'express';
-import { APIError } from '../../shared/utils/custom_error';
-import { IUser } from './user.model';
 
+// Mock UserService to isolate controller logic and avoid DB hits
 jest.mock('./user.service');
-jest.mock('../../user/authentication/authentication.service');
-jest.mock('../../common/utils/request_validator');
 
-describe('UserController', () => {
-  let userController: UserController;
-  let userServiceMock: jest.Mocked<UserService>;
-  let authServiceMock: jest.Mocked<AuthenticationService>;
-  let req: Partial<Request>;
-  let res: Partial<Response>;
-  let next: NextFunction;
+// Express app instance
+const app = createApp();
 
-  beforeEach(() => {
-    userServiceMock = new UserService() as jest.Mocked<UserService>;
-    authServiceMock = new AuthenticationService() as jest.Mocked<AuthenticationService>;
+// Get the mock instance of UserService injected into the controller
+const userService = userContainer.get<UserService>(USER_TYPES.UserService);
 
-    // Ensure the createAccessToken method is mocked correctly
-    authServiceMock.createAccessToken = jest.fn();
+describe('UserController Integration Tests', () => {
+  // Test for "GET /api/v1/user/me" (getProfile)
+  describe('GET /me', () => {
+    it('should return the logged-in user profile', async () => {
+      const mockUser = { _id: '123', email: 'test@example.com', firstName: 'Foo' };
+      // Mock the service method used inside the controller
+      userService.getUser = jest.fn().mockResolvedValue(mockUser);
 
-    userController = new UserController();
-    (userController as any).userService = userServiceMock;
-    (userController as any).authService = authServiceMock;
+      // Simulate the user being in session (could also mock res.locals.user if needed)
+      const res = await request(app)
+        .get('/api/v1/user/me')
+        .set('Authorization', 'Bearer mock-token'); // assuming token-based auth
 
-    req = {};
-    res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
-      locals: {
-        user: { user: { _id: 'userId' } },
-      },
-    };
-    next = jest.fn();
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  describe('signUp', () => {
-    it('should create a user and return status 201', async () => {
-      (validateRequest as jest.Mock).mockResolvedValue({
-        email: 'test@test.com',
-        password: 'password',
-      });
-      userServiceMock.createUser.mockResolvedValue({
-        id: '234567',
-        email: 'test@test.com',
-      } as IUser);
-
-      await userController.signUp(req as Request, res as Response, next);
-
-      expect(validateRequest).toHaveBeenCalledWith(SignUpDTO, req.body);
-      expect(userServiceMock.createUser).toHaveBeenCalledWith({
-        email: 'test@test.com',
-        password: 'password',
-      });
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({
-        status: 'success',
-        message: 'Registration successful',
-        data: { id: '234567', email: 'test@test.com' },
-      });
-    });
-
-    it('should call next with an error if createUser fails', async () => {
-      (validateRequest as jest.Mock).mockResolvedValue({
-        email: 'test@test.com',
-        password: 'password',
-      });
-      userServiceMock.createUser.mockRejectedValue(new APIError('Failed to create user'));
-
-      await userController.signUp(req as Request, res as Response, next);
-
-      expect(next).toHaveBeenCalledWith(new APIError('Failed to create user'));
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe('profile in session fetched successfully');
+      expect(res.body.data).toEqual(mockUser);
     });
   });
 
-  describe('createAdmin', () => {
-    it('should create an admin user and return status 201', async () => {
-      (validateRequest as jest.Mock).mockResolvedValue({
-        email: 'admin@test.com',
-        password: 'password',
-        role: 'admin',
-      });
-      userServiceMock.createUser.mockResolvedValue({
-        id: 'adminId',
-        email: 'admin@test.com',
-      } as IUser);
+  // Test for "GET /api/v1/user/:id" (getUser)
+  describe('GET /:id', () => {
+    it('should fetch a specific user by ID', async () => {
+      const mockUser = { _id: '123', email: 'test@example.com', firstName: 'Foo' };
+      const userId = '123';
+      userService.getUser = jest.fn().mockResolvedValue(mockUser);
 
-      req.body = { email: 'admin@test.com', password: 'password' };
+      const res = await request(app)
+        .get(`/api/v1/user/${userId}`)
+        .set('Authorization', 'Bearer mock-token');
 
-      await userController.createAdmin(req as Request, res as Response, next);
-
-      expect(validateRequest).toHaveBeenCalledWith(CreateAdminDTO, { ...req.body, role: 'admin' });
-      expect(userServiceMock.createUser).toHaveBeenCalledWith({
-        email: 'admin@test.com',
-        password: 'password',
-        role: 'admin',
-      });
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({
-        status: 'success',
-        message: 'Admin creation successful',
-        data: { id: 'adminId', email: 'admin@test.com' },
-      });
-    });
-
-    it('should call next with an error if createUser fails', async () => {
-      (validateRequest as jest.Mock).mockResolvedValue({
-        email: 'admin@test.com',
-        password: 'password',
-        role: 'admin',
-      });
-      userServiceMock.createUser.mockRejectedValue(new APIError('Failed to create admin'));
-
-      req.body = { email: 'admin@test.com', password: 'password' };
-
-      await userController.createAdmin(req as Request, res as Response, next);
-
-      expect(next).toHaveBeenCalledWith(new APIError('Failed to create admin'));
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe('User fetched successfully');
+      expect(res.body.data).toEqual(mockUser);
     });
   });
 
-  describe('login', () => {
-    it('should login the user and return status 200', async () => {
-      (validateRequest as jest.Mock).mockResolvedValue({
-        email: 'test@test.com',
-        password: 'password',
-      });
-      userServiceMock.login.mockResolvedValue({ id: 'userId', email: 'test@test.com' } as IUser);
-      authServiceMock.createAccessToken.mockReturnValue('access_token');
+  // Test for "PATCH /api/v1/user/:id" (makeAdmin)
+  describe('PATCH /:id', () => {
+    it('should make a user an admin successfully', async () => {
+      const userId = '123';
+      const mockAdminUser = { _id: userId, email: 'test@example.com', role: 'admin' };
 
-      req.body = { email: 'test@test.com', password: 'password' };
+      userService.makeAdmin = jest.fn().mockResolvedValue(mockAdminUser);
 
-      await userController.login(req as Request, res as Response, next);
+      const res = await request(app)
+        .patch(`/api/v1/user/${userId}`)
+        .set('Authorization', 'Bearer mock-token');
 
-      expect(validateRequest).toHaveBeenCalledWith(SignInDTO, req.body);
-      expect(userServiceMock.login).toHaveBeenCalledWith({
-        email: 'test@test.com',
-        password: 'password',
-      });
-      expect(authServiceMock.createAccessToken).toHaveBeenCalledWith({
-        user: { id: 'userId', email: 'test@test.com' },
-      });
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        status: 'success',
-        message: 'Logged in successfully',
-        data: { accessToken: 'access_token' },
-      });
-    });
-
-    it('should call next with an error if login fails', async () => {
-      (validateRequest as jest.Mock).mockResolvedValue({
-        email: 'test@test.com',
-        password: 'password',
-      });
-      userServiceMock.login.mockRejectedValue(new APIError('Login failed'));
-
-      req.body = { email: 'test@test.com', password: 'password' };
-
-      await userController.login(req as Request, res as Response, next);
-
-      expect(next).toHaveBeenCalledWith(new APIError('Login failed'));
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe('User made an admin successfully');
+      expect(res.body.data).toEqual(mockAdminUser);
     });
   });
 
-  // Add other method tests here like `getUser`, `getProfile`, `updateProfile`, etc.
+  // Test for "DELETE /api/v1/user/logout" (logout)
+  describe('DELETE /logout', () => {
+    it('should log out the user successfully', async () => {
+      const res = await request(app)
+        .delete('/api/v1/user/logout')
+        .set('Authorization', 'Bearer mock-token');
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe('Logged out successfully');
+    });
+  });
+
+  // Test for "PUT /api/v1/user/:id" (updateProfile)
+  describe('PUT /:id', () => {
+    it('should update the user profile successfully', async () => {
+      const updatedData = { firstName: 'Updated User' };
+      const updatedUser = { _id: '123', email: 'test@example.com', ...updatedData };
+
+      userService.updateUser = jest.fn().mockResolvedValue(updatedUser);
+
+      const res = await request(app)
+        .put(`/api/v1/user/${updatedUser._id}`)
+        .set('Authorization', 'Bearer mock-token')
+        .send(updatedData);
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toBe('Profile updated successfully');
+      expect(res.body.data).toEqual(updatedUser);
+    });
+  });
+
+  // Additional tests could be written for the other routes like generating keys, etc.
 });

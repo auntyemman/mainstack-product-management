@@ -8,7 +8,6 @@ import { AUTH_TYPES } from './di/auth.di';
 
 @injectable()
 export class AuthController {
-  // private readonly authService;
   constructor(@inject(AUTH_TYPES.AuthService) private readonly authService: AuthenticationService) {
     this.authService = authService;
   }

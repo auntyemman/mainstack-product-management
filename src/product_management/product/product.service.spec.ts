@@ -1,204 +1,218 @@
 import { ProductService } from './product.service';
 import { ProductRepository } from './product.repository';
+import { EmitterService } from '../../shared/event_bus/event_emitter';
 import { IProduct } from './product.model';
-import { BadRequestError, APIError, NotFoundError } from '../../shared/utils/custom_error';
+import { ConflictError, NotFoundError, UnprocessableEntityError } from '../../shared/utils/custom_error';
+import { ProductStatus } from './product.dto';
 import { PaginationResult } from '../../shared/utils/pagination';
 
-// Mock ProductRepository
 jest.mock('./product.repository');
+jest.mock('../../shared/event_bus/event_emitter');
 
 describe('ProductService', () => {
   let productService: ProductService;
-  let productRepository: jest.Mocked<ProductRepository>;
+  let mockProductRepository: jest.Mocked<ProductRepository>;
+  let mockEmitterService: jest.Mocked<EmitterService>;
 
   beforeEach(() => {
-    // Initialize ProductService and its dependencies
-    productRepository = new ProductRepository() as jest.Mocked<ProductRepository>;
-    productService = new ProductService();
+    mockProductRepository = new ProductRepository() as jest.Mocked<ProductRepository>;
+    mockEmitterService = new EmitterService() as jest.Mocked<EmitterService>;
 
-    // Override the productRepository with the mocked one
-    (productService as any).productRepository = productRepository;
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
+    productService = new ProductService(mockEmitterService, mockProductRepository);
   });
 
   describe('createProduct', () => {
-    it('should create a product successfully', async () => {
-      const productData: IProduct = {
+    it('should successfully create a new product', async () => {
+      const productData = {
+        _id: '1',
         name: 'Test Product',
-        category: [],
-        tags: [],
-      } as unknown as IProduct;
+        price: 100,
+        status: ProductStatus.unpublished,
+      } as IProduct;
 
-      // Mock repository methods
-      productRepository.findByName.mockResolvedValue(null);
-      productRepository.create.mockResolvedValue(productData);
+      mockProductRepository.findByName.mockResolvedValue(null); // No product with the same name exists
+      mockProductRepository.create.mockResolvedValue(productData);
 
-      const result = await productService.createProduct(productData);
+      const createdProduct = await productService.createProduct(productData);
 
-      expect(result).toEqual(productData);
-      expect(productRepository.findByName).toHaveBeenCalledWith('Test Product');
-      expect(productRepository.create).toHaveBeenCalledWith(productData);
+      expect(mockProductRepository.findByName).toHaveBeenCalledWith(productData.name);
+      expect(mockProductRepository.create).toHaveBeenCalledWith(productData);
+      expect(createdProduct).toEqual(productData);
     });
 
-    it('should throw BadRequestError if the product already exists', async () => {
+    it('should throw an error if product already exists', async () => {
       const productData: IProduct = {
+        _id: '1',
         name: 'Test Product',
-        category: [],
-        tags: [],
-      } as unknown as IProduct;
+        price: 100,
+        status: ProductStatus.unpublished,
+      } as IProduct;
 
-      // Mock repository methods
-      productRepository.findByName.mockResolvedValue(productData);
+      mockProductRepository.findByName.mockResolvedValue(productData); // Product already exists
 
-      await expect(productService.createProduct(productData)).rejects.toThrow(BadRequestError);
-      expect(productRepository.findByName).toHaveBeenCalledWith('Test Product');
-      expect(productRepository.create).not.toHaveBeenCalled();
+      await expect(productService.createProduct(productData))
+        .rejects
+        .toThrow(new ConflictError('Product already exists'));
+    });
+
+    it('should throw an error if product creation fails', async () => {
+      const productData: IProduct = {
+        _id: '1',
+        name: 'Test Product',
+        price: 100,
+        status: ProductStatus.unpublished,
+      } as IProduct;
+
+      mockProductRepository.findByName.mockResolvedValue(null); // No product with the same name exists
+      // mockProductRepository.create.mockResolvedValue(null); // Product creation failed
+
+      await expect(productService.createProduct(productData))
+        .rejects
+        .toThrow(new UnprocessableEntityError('Failed to create product'));
     });
   });
 
   describe('getProduct', () => {
-    it('should return a product if it exists', async () => {
-      const productData: IProduct = {
+    it('should successfully fetch a product by ID', async () => {
+      const productId = '1';
+      const product: IProduct = {
+        _id: productId,
         name: 'Test Product',
-        category: [],
-        tags: [],
-      } as unknown as IProduct;
+        price: 100,
+        status: ProductStatus.unpublished,
+      } as IProduct;
 
-      // Mock repository methods
-      productRepository.findById.mockResolvedValue(productData);
+      mockProductRepository.findById.mockResolvedValue(product);
 
-      const result = await productService.getProduct('productId');
+      const fetchedProduct = await productService.getProduct(productId);
 
-      expect(result).toEqual(productData);
-      expect(productRepository.findById).toHaveBeenCalledWith('productId');
+      expect(mockProductRepository.findById).toHaveBeenCalledWith(productId);
+      expect(fetchedProduct).toEqual(product);
     });
 
-    it('should throw NotFoundError if the product does not exist', async () => {
-      // Mock repository methods
-      productRepository.findById.mockResolvedValue(null);
+    it('should throw an error if product is not found', async () => {
+      const productId = '1';
 
-      await expect(productService.getProduct('productId')).rejects.toThrow(NotFoundError);
-      expect(productRepository.findById).toHaveBeenCalledWith('productId');
+      mockProductRepository.findById.mockResolvedValue(null); // Product not found
+
+      await expect(productService.getProduct(productId))
+        .rejects
+        .toThrow(new NotFoundError('Product not found'));
     });
   });
 
   describe('publishProduct', () => {
-    it('should publish a product successfully', async () => {
-      const productData: IProduct = {
+    it('should successfully publish a product', async () => {
+      const productId = '1';
+      const updatedProduct: IProduct = {
+        _id: productId,
         name: 'Test Product',
-        category: [],
-        tags: [],
-      } as unknown as IProduct;
+        price: 100,
+        status: ProductStatus.published,
+      } as IProduct;
 
-      // Mock repository methods
-      productRepository.update.mockResolvedValue(productData);
+      mockProductRepository.update.mockResolvedValue(updatedProduct);
 
-      const result = await productService.publishProduct('productId', productData);
+      const result = await productService.publishProduct(productId);
 
-      expect(result).toEqual(productData);
-      expect(productRepository.update).toHaveBeenCalledWith('productId', productData);
+      expect(mockProductRepository.update).toHaveBeenCalledWith(productId, { status: ProductStatus.published });
+      expect(result).toEqual(updatedProduct);
     });
 
-    it('should throw APIError if publishing fails', async () => {
-      const productData: IProduct = {
-        name: 'Test Product',
-        category: [],
-        tags: [],
-      } as unknown as IProduct;
+    it('should throw an error if product publishing fails', async () => {
+      const productId = '1';
 
-      // Mock repository methods
-      productRepository.update.mockResolvedValue(null);
+      mockProductRepository.update.mockResolvedValue(null); // Product update failed
 
-      await expect(productService.publishProduct('productId', productData)).rejects.toThrow(
-        APIError,
-      );
-      expect(productRepository.update).toHaveBeenCalledWith('productId', productData);
+      await expect(productService.publishProduct(productId))
+        .rejects
+        .toThrowError(new UnprocessableEntityError('Failed to publish product'));
     });
   });
 
   describe('deleteProduct', () => {
-    it('should delete a product successfully', async () => {
-      const productData: IProduct = {
+    it('should successfully delete a product', async () => {
+      const productId = '1';
+      const deletedProduct: IProduct = {
+        _id: productId,
         name: 'Test Product',
-        category: [],
-        tags: [],
-      } as unknown as IProduct;
+        price: 100,
+      } as IProduct;
 
-      // Mock repository methods
-      productRepository.delete.mockResolvedValue(productData);
+      // mockEmitterService.emitAsync.mockResolvedValue(true); // Event emitted successfully
+      mockProductRepository.delete.mockResolvedValue(deletedProduct);
 
-      const result = await productService.deleteProduct('productId');
+      const result = await productService.deleteProduct(productId);
 
-      expect(result).toEqual(productData);
-      expect(productRepository.delete).toHaveBeenCalledWith('productId');
+      expect(mockEmitterService.emitAsync).toHaveBeenCalledWith('productDeleted', productId);
+      expect(mockProductRepository.delete).toHaveBeenCalledWith(productId);
+      expect(result).toEqual(deletedProduct);
     });
 
-    it('should throw APIError if deletion fails', async () => {
-      // Mock repository methods
-      productRepository.delete.mockResolvedValue(null);
+    it('should throw an error if product deletion fails', async () => {
+      const productId = '1';
 
-      await expect(productService.deleteProduct('productId')).rejects.toThrow(APIError);
-      expect(productRepository.delete).toHaveBeenCalledWith('productId');
+      // mockEmitterService.emitAsync.mockResolvedValue(null); // Event emitted successfully
+      mockProductRepository.delete.mockResolvedValue(null); // Deletion failed
+
+      await expect(productService.deleteProduct(productId))
+        .rejects
+        .toThrow(new UnprocessableEntityError('Failed to delete product or could not find product'));
     });
   });
 
   describe('getProducts', () => {
-    it('should return a paginated list of products', async () => {
+    it('should return paginated list of products', async () => {
       const query = {};
       const limit = 10;
       const page = 1;
-      const products: PaginationResult<IProduct> = {
+      const paginationResult: PaginationResult<IProduct> = {
         data: [],
         totalItems: 0,
+        currentPage: page,
         totalPages: 1,
-        currentPage: 1,
         limit,
       };
 
-      // Mock repository methods
-      productRepository.findMany.mockResolvedValue(products);
+      mockProductRepository.findMany.mockResolvedValue(paginationResult);
 
       const result = await productService.getProducts(query, limit, page);
 
-      expect(result).toEqual(products);
-      expect(productRepository.findMany).toHaveBeenCalledWith(query, limit, page);
+      expect(mockProductRepository.findMany).toHaveBeenCalledWith(query, limit, page);
+      expect(result).toEqual(paginationResult);
     });
   });
 
   describe('updateProduct', () => {
-    it('should update a product successfully', async () => {
+    it('should successfully update a product', async () => {
+      const productId = '1';
       const productData: IProduct = {
+        _id: productId,
         name: 'Updated Product',
-        category: [],
-        tags: [],
-      } as unknown as IProduct;
+        price: 150,
+    } as IProduct;
 
-      // Mock repository methods
-      productRepository.update.mockResolvedValue(productData);
+      mockProductRepository.update.mockResolvedValue(productData);
 
-      const result = await productService.updateProduct('productId', productData);
+      const result = await productService.updateProduct(productId, productData);
 
+      expect(mockProductRepository.update).toHaveBeenCalledWith(productId, productData);
       expect(result).toEqual(productData);
-      expect(productRepository.update).toHaveBeenCalledWith('productId', productData);
     });
 
-    it('should throw APIError if update fails', async () => {
+    it('should throw an error if product update fails', async () => {
+      const productId = '1';
       const productData: IProduct = {
+        _id: productId,
         name: 'Updated Product',
-        category: [],
-        tags: [],
-      } as unknown as IProduct;
+        price: 150,
+      } as IProduct;
 
-      // Mock repository methods
-      productRepository.update.mockResolvedValue(null);
+      mockProductRepository.update.mockResolvedValue(null); // Product update failed
 
-      await expect(productService.updateProduct('productId', productData)).rejects.toThrow(
-        APIError,
-      );
-      expect(productRepository.update).toHaveBeenCalledWith('productId', productData);
+      await expect(productService.updateProduct(productId, productData))
+        .rejects
+        .toThrow(new UnprocessableEntityError('Failed to update product'));
     });
   });
 });

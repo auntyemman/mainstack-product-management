@@ -9,7 +9,9 @@ import { userContainer } from '../user_management/users/di/user.container';
 import { USER_TYPES } from '../user_management/users/di/user.types';
 
 export const notification: Router = Router();
-const notificationController = notificationContainer.get<NotificationController>(NOTIFICATION_TYPES.NotificationController);
+const notificationController = notificationContainer.get<NotificationController>(
+  NOTIFICATION_TYPES.NotificationController,
+);
 const notificationCont = bindMethods(notificationController) as NotificationController;
 
 // Pass userRepository into the middleware

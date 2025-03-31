@@ -9,10 +9,22 @@ import { eventContainer } from '../../shared/event_bus/di/event.container';
 
 const notificationContainer = new Container();
 
-notificationContainer.bind<NotificationRepository>(NOTIFICATION_TYPES.NotificationRepository).to(NotificationRepository).inSingletonScope();
-notificationContainer.bind<NotificationService>(NOTIFICATION_TYPES.NotificationService).to(NotificationService).inSingletonScope();
-notificationContainer.bind<NotificationController>(NOTIFICATION_TYPES.NotificationController).to(NotificationController).inSingletonScope();
-notificationContainer.bind<NotificationEventListeners>(NOTIFICATION_TYPES.NotificationEventListeners).to(NotificationEventListeners).inSingletonScope();
+notificationContainer
+  .bind<NotificationRepository>(NOTIFICATION_TYPES.NotificationRepository)
+  .to(NotificationRepository)
+  .inSingletonScope();
+notificationContainer
+  .bind<NotificationService>(NOTIFICATION_TYPES.NotificationService)
+  .to(NotificationService)
+  .inSingletonScope();
+notificationContainer
+  .bind<NotificationController>(NOTIFICATION_TYPES.NotificationController)
+  .to(NotificationController)
+  .inSingletonScope();
+notificationContainer
+  .bind<NotificationEventListeners>(NOTIFICATION_TYPES.NotificationEventListeners)
+  .to(NotificationEventListeners)
+  .inSingletonScope();
 
 // binding from other services to inventory
 // Use the shared instance of EmitterService from the event bus

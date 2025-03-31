@@ -24,7 +24,9 @@ export class Server {
       });
       // Ensure event listeners are initialized at app startup
       inventoryContainer.get<InventoryEventListeners>(INVENTORY_TYPES.InventoryEventListeners);
-      notificationContainer.get<NotificationEventListeners>(NOTIFICATION_TYPES.NotificationEventListeners);
+      notificationContainer.get<NotificationEventListeners>(
+        NOTIFICATION_TYPES.NotificationEventListeners,
+      );
       logger.info('Server started successfully.');
     } catch (error) {
       logger.error(error);

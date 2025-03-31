@@ -1,135 +1,111 @@
 import { UserService } from './user.service';
 import { UserRepository } from './user.repository';
-import { hashPassword, comparePasswords } from '../../shared/utils/password_hash';
-import { BadRequestError, NotFoundError, APIError } from '../../shared/utils/custom_error';
 import { IUser } from './user.model';
+import { NotFoundError, UnprocessableEntityError } from '../../shared/utils/custom_error';
+import { UserRole } from './user.dto';
 
-jest.mock('./user.repository');
-jest.mock('../../common/utils/password_hash');
+// Mock the UserRepository to avoid actual database interactions
+const mockUserRepo = {
+  findById: jest.fn(),
+  update: jest.fn(),
+};
+
+// Initialize the UserService with the mocked repository
+const userService = new UserService(mockUserRepo as unknown as UserRepository);
 
 describe('UserService', () => {
-  let userService: UserService;
-  let userRepositoryMock: jest.Mocked<UserRepository>;
+  let mockUser: Partial<IUser>;
 
   beforeEach(() => {
-    userRepositoryMock = new UserRepository() as jest.Mocked<UserRepository>;
-    userService = new UserService();
-    (userService as any).userRepo = userRepositoryMock;
-  });
-
-  afterEach(() => {
+    // Reset all mocks before each test to ensure test isolation
     jest.clearAllMocks();
+
+    // Define a sample user object
+    mockUser = {
+      id: '123',
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'johndoe@example.com',
+      password: 'hashedpassword',
+      role: UserRole.user,
+    };
   });
 
-  describe('createUser', () => {
-    it('should throw an error if user already exists', async () => {
-      userRepositoryMock.findByEmail.mockResolvedValue({} as IUser);
-
-      await expect(
-        userService.createUser({ email: 'test@test.com', password: '1234' } as IUser),
-      ).rejects.toThrow(BadRequestError);
-
-      expect(userRepositoryMock.findByEmail).toHaveBeenCalledWith('test@test.com');
-    });
-
-    it('should create a new user', async () => {
-      userRepositoryMock.findByEmail.mockResolvedValue(null);
-      userRepositoryMock.create.mockResolvedValue({
-        email: 'test@test.com',
-        password: 'hashed_password',
-      } as IUser);
-      (hashPassword as jest.Mock).mockResolvedValue('hashed_password');
-
-      const result = await userService.createUser({
-        email: 'test@test.com',
-        password: '1234',
-      } as IUser);
-
-      expect(hashPassword).toHaveBeenCalledWith('1234');
-      expect(userRepositoryMock.create).toHaveBeenCalledWith({
-        email: 'test@test.com',
-        password: 'hashed_password',
-      });
-      expect(result).toEqual({ email: 'test@test.com', password: 'hashed_password' });
-    });
-  });
-
-  describe('login', () => {
-    it('should throw an error if user is not found', async () => {
-      userRepositoryMock.findByEmail.mockResolvedValue(null);
-
-      await expect(
-        userService.login({ email: 'test@test.com', password: '1234' } as IUser),
-      ).rejects.toThrow(NotFoundError);
-
-      expect(userRepositoryMock.findByEmail).toHaveBeenCalledWith('test@test.com');
-    });
-
-    it('should throw an error if passwords do not match', async () => {
-      userRepositoryMock.findByEmail.mockResolvedValue({
-        email: 'test@test.com',
-        password: 'hashed_password',
-      } as IUser);
-      (comparePasswords as jest.Mock).mockResolvedValue(false);
-
-      await expect(
-        userService.login({ email: 'test@test.com', password: '1234' } as IUser),
-      ).rejects.toThrow(BadRequestError);
-
-      expect(comparePasswords).toHaveBeenCalledWith('1234', 'hashed_password');
-    });
-
-    it('should return the user if login is successful', async () => {
-      userRepositoryMock.findByEmail.mockResolvedValue({
-        email: 'test@test.com',
-        password: 'hashed_password',
-      } as IUser);
-      (comparePasswords as jest.Mock).mockResolvedValue(true);
-
-      const result = await userService.login({ email: 'test@test.com', password: '1234' } as IUser);
-
-      expect(comparePasswords).toHaveBeenCalledWith('1234', 'hashed_password');
-      expect(result).toEqual({ email: 'test@test.com', password: 'hashed_password' });
-    });
-  });
-
+  // Test: Fetching a user by ID
   describe('getUser', () => {
-    it('should throw an error if user is not found', async () => {
-      userRepositoryMock.findById.mockResolvedValue(null);
+    it('should return a user when found', async () => {
+      // Mock findById to return a user
+      mockUserRepo.findById.mockResolvedValue(mockUser);
 
-      await expect(userService.getUser('userId')).rejects.toThrow(NotFoundError);
+      // Call getUser
+      const result = await userService.getUser(mockUser.id);
 
-      expect(userRepositoryMock.findById).toHaveBeenCalledWith('userId');
+      // Expect the returned user to match
+      expect(result).toEqual(mockUser);
+      expect(mockUserRepo.findById).toHaveBeenCalledWith(mockUser.id);
     });
 
-    it('should return the user if found', async () => {
-      userRepositoryMock.findById.mockResolvedValue({ email: 'test@test.com' } as IUser);
+    it('should throw NotFoundError if user does not exist', async () => {
+      // Mock findById to return null (user not found)
+      mockUserRepo.findById.mockResolvedValue(null);
 
-      const result = await userService.getUser('userId');
-
-      expect(userRepositoryMock.findById).toHaveBeenCalledWith('userId');
-      expect(result).toEqual({ email: 'test@test.com' });
+      // Expect the function to throw a NotFoundError
+      await expect(userService.getUser('non-existent-id')).rejects.toThrow(NotFoundError);
+      expect(mockUserRepo.findById).toHaveBeenCalledWith('non-existent-id');
     });
   });
 
+  // Test: Updating a user
   describe('updateUser', () => {
-    it('should throw an error if update fails', async () => {
-      userRepositoryMock.update.mockResolvedValue(null);
+    it('should update and return the updated user', async () => {
+      // Mock update to return the updated user
+      const updatedUser = { ...mockUser, firstName: 'Foo' };
+      mockUserRepo.update.mockResolvedValue(updatedUser);
 
-      await expect(userService.updateUser('userId', { email: 'test@test.com' })).rejects.toThrow(
-        APIError,
-      );
+      // Call updateUser
+      const result = await userService.updateUser(mockUser.id, { firstName: 'Foo' });
 
-      expect(userRepositoryMock.update).toHaveBeenCalledWith('userId', { email: 'test@test.com' });
+      // Expect the returned user to have the updated firstName
+      expect(result).toEqual(updatedUser);
+      expect(mockUserRepo.update).toHaveBeenCalledWith(mockUser.id, { firstName: 'Foo' });
     });
 
-    it('should return the updated user', async () => {
-      userRepositoryMock.update.mockResolvedValue({ email: 'test@test.com' } as IUser);
+    it('should throw UnprocessableEntityError if update fails', async () => {
+      // Mock update to return null (update failure)
+      mockUserRepo.update.mockResolvedValue(null);
 
-      const result = await userService.updateUser('userId', { email: 'test@test.com' });
+      // Expect the function to throw an UnprocessableEntityError
+      await expect(userService.updateUser(mockUser.id, { firstName: 'Foo' })).rejects.toThrow(
+        UnprocessableEntityError,
+      );
+      expect(mockUserRepo.update).toHaveBeenCalledWith(mockUser.id, { firstName: 'Foo' });
+    });
+  });
 
-      expect(userRepositoryMock.update).toHaveBeenCalledWith('userId', { email: 'test@test.com' });
-      expect(result).toEqual({ email: 'test@test.com' });
+  // Test: Promoting a user to admin
+  describe('makeAdmin', () => {
+    it('should update user role to admin', async () => {
+      // Mock getUser to return a user
+      mockUserRepo.findById.mockResolvedValue(mockUser);
+
+      // Mock update to return user with updated role
+      const updatedUser = { ...mockUser, role: UserRole.admin };
+      mockUserRepo.update.mockResolvedValue(updatedUser);
+
+      // Call makeAdmin
+      const result = await userService.makeAdmin(mockUser.id);
+
+      // Expect the user's role to be updated to admin
+      expect(result.role).toBe(UserRole.admin);
+      expect(mockUserRepo.update).toHaveBeenCalledWith(mockUser.id, { role: UserRole.admin });
+    });
+
+    it('should throw NotFoundError if user does not exist', async () => {
+      // Mock getUser to return null (user not found)
+      mockUserRepo.findById.mockResolvedValue(null);
+
+      // Expect the function to throw a NotFoundError
+      await expect(userService.makeAdmin('non-existent-id')).rejects.toThrow(NotFoundError);
     });
   });
 });

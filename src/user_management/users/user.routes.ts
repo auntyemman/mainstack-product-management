@@ -12,7 +12,7 @@ const userCont = bindMethods(userController) as UserController;
 
 // Pass userRepository into the middleware
 const userRepository = userContainer.get<UserRepository>(USER_TYPES.UserRepository);
-const authMiddleware = authUser(userRepository);
+export const authMiddleware = authUser(userRepository);
 
 user.delete('/logout', authMiddleware, userCont.logout);
 user.patch('/:id', authMiddleware, userCont.makeAdmin);

@@ -13,9 +13,7 @@ export class NotificationRepository extends BaseRepository<INotification> {
     this.notificationModel = Notification;
   }
 
-  async findMany(
-      userId: string,
-    ): Promise<INotification[]> {
-      return await this.notificationModel.find({ userId }).sort({ createdAt: -1 });
-    }
+  async findMany(userId: string): Promise<INotification[]> {
+    return await this.notificationModel.find({ userId }).sort({ createdAt: -1 });
+  }
 }

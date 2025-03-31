@@ -17,3 +17,13 @@ export const databaseConnection = async () => {
     throw new DatabaseConnectionError();
   }
 };
+
+export const disconnectDatabase = async () => {
+  try {
+    await mongoose.disconnect();
+    logger.info('Database disconnected successfully');
+  } catch (error) {
+    logger.error(`${error}`);
+    throw new DatabaseConnectionError();
+  }
+};

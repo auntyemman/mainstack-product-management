@@ -11,7 +11,10 @@ import { EmitterService } from '../../shared/event_bus/event_emitter';
 
 @injectable()
 export class AuthenticationService {
-  constructor(@inject(USER_TYPES.UserRepository) private readonly userRepo: UserRepository, @inject(EVENT_TYPES.EmitterService) private readonly emitterService: EmitterService){
+  constructor(
+    @inject(USER_TYPES.UserRepository) private readonly userRepo: UserRepository,
+    @inject(EVENT_TYPES.EmitterService) private readonly emitterService: EmitterService,
+  ) {
     this.userRepo = userRepo;
     this.emitterService = emitterService;
   }
@@ -23,7 +26,7 @@ export class AuthenticationService {
     const hashedPassword = await hashPassword(data.password);
     data.password = hashedPassword;
     const newUser = await this.userRepo.create(data);
-    await this.emitterService.emitAsync('userRegistered', newUser.id);  // Emit an event when a user is created
+    await this.emitterService.emitAsync('userRegistered', newUser.id); // Emit an event when a user is created
     return newUser;
   }
 
@@ -40,7 +43,7 @@ export class AuthenticationService {
     // Generate both access and refresh tokens
     const accessToken = createAccessToken({ sub: user._id } as JWTPayload);
     const refreshToken = createRefreshToken({ sub: user._id } as JWTPayload);
-    await this.emitterService.emitAsync('userLoggedIn', user.id);  // Emit an event when a user is created
+    await this.emitterService.emitAsync('userLoggedIn', user.id); // Emit an event when a user is created
     return { accessToken, refreshToken };
   }
 

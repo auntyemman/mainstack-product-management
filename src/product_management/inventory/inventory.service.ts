@@ -11,6 +11,7 @@ import { IInventory } from './inventory.model';
 import { InventoryRepository } from './inventory.repository';
 import { inject, injectable } from 'inversify';
 import { INVENTORY_TYPES } from './di/inventory.di';
+import { CreateInventoryDTO, UpdateInventoryDTO } from './inventory.dto';
 
 @injectable()
 export class InventoryService {
@@ -21,14 +22,12 @@ export class InventoryService {
     this.inventoryRepo = inventoryRepo;
   }
 
-  async createInventory(productId: string, data: IInventory): Promise<IInventory> {
-    // attach product id to inventory payload
-    data.product = productId;
+  async createInventory(productId: string, data: CreateInventoryDTO): Promise<IInventory> {
     const existingInventory = await this.inventoryRepo.findOne({ product: productId });
     if (existingInventory) {
       throw new ConflictError('Inventory already exists for this product');
     }
-    const inventory = await this.inventoryRepo.create(data);
+    const inventory = await this.inventoryRepo.create({ ...data, product: productId });
     if (!inventory) {
       throw new UnprocessableEntityError('Failed to create inventory');
     }
@@ -57,7 +56,7 @@ export class InventoryService {
     return inventories;
   }
 
-  async updateInventory(productId: string, data: IInventory): Promise<IInventory> {
+  async updateInventory(productId: string, data: UpdateInventoryDTO): Promise<IInventory> {
     const inventory = await this.inventoryRepo.updateOne({ product: productId }, data);
     if (!inventory) {
       throw new UnprocessableEntityError('Failed to update inventory');
