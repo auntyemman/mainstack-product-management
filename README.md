@@ -60,10 +60,10 @@ The following table outlines the API design for the user management domain:
 | **HTTP Method** | **Endpoint**           | **Description**                                    | **Request Body**        | **Response**            |
 |-----------------|------------------------|----------------------------------------------------|-------------------------|-------------------------|
 | `POST`          | `/auth/signup`              | User registration/signup                          | `SignUpDTO`             | `User`                  |
-| `POST`          | `/auth/login`               | User login                                         | `LoginDTO`              | `AuthResponse`          |
-| `GET`           | `/auth/refresh`             | Refresh authentication token                       | N/A                     | `AuthResponse`          |
-| `DELETE`        | `/auth/logout`              | User logout (invalidate token)                     | N/A                     | `SuccessResponse`       |
-| `PATCH`         | `/users/:id`                 | Update user profile to make user an admin          | `MakeAdminDTO`          | `User`                  |
+| `POST`          | `/auth/login`               | User login                                         | `LoginDTO`              | `Tokens`          |
+| `GET`           | `/auth/refresh`             | Refresh authentication token                       | N/A                     | `Tokens`          |
+| `DELETE`        | `/auth/logout`              | User logout (invalidate token)                     | N/A                     | `N/A`       |
+| `PATCH`         | `/users/:id`                 | Update user profile to make user an admin          | `N/A`          | `User`                  |
 | `GET`           | `/users/me`                  | Get the current user's profile                     | N/A                     | `User`                  |
 | `GET`           | `/users/:id`                 | Fetch a specific user by ID                        | N/A                     | `User`                  |
 | `PUT`           | `/users/:id`                 | Update user profile                                | `UpdateProfileDTO`      | `User`                  |
