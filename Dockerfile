@@ -24,4 +24,4 @@ COPY --from=build /src/app/.env ./.env
 
 EXPOSE 5500
 
-CMD ["npm","run", "start:dev"]
+CMD ["npm","run", "start:prod"]

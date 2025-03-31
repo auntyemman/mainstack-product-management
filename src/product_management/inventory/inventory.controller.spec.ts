@@ -2,6 +2,13 @@ import request from 'supertest';
 import { createApp } from '../../app';
 import { InventoryService } from './inventory.service';
 import { UnprocessableEntityError, NotFoundError } from '../../shared/utils/custom_error';
+import { Request, Response, NextFunction } from 'express';
+// Mock the authentication middleware
+jest.mock('../../shared/middlewares/auth', () => ({
+  authUser: () => (req: Request, res: Response, next: NextFunction) => next()
+}));
+
+jest.mock('../../shared/middlewares/admin.RBAC', () => (req: Request, res: Response, next: NextFunction) => next());
 
 jest.mock('./inventory.service'); // Mock InventoryService
 jest.mock('./inventory.repository'); // Mock InventoryRepository
@@ -29,7 +36,7 @@ describe('InventoryController Integration Tests', () => {
     });
 
     const response = await request(app)
-      .post(`/inventory/products/${productId}/inventory`)  // Adjusted path
+      .post(`/api/v1/products/${productId}/inventory`)  // Fixed path to match route
       .send(mockData)
       .expect(201);
 
@@ -67,7 +74,7 @@ describe('InventoryController Integration Tests', () => {
     (mockInventoryService.prototype.getInventory as jest.Mock).mockResolvedValue(mockInventory);
 
     const response = await request(app)
-      .get(`/api/v1/products/${productId}/inventory`)  // Adjusted path
+      .get(`/api/v1/products/${productId}/inventory`)
       .expect(200);
 
     expect(response.body.status).toBe('success');
@@ -86,7 +93,7 @@ describe('InventoryController Integration Tests', () => {
     );
 
     const response = await request(app)
-      .get(`/api/v1/products/${productId}/inventory`)  // Adjusted path
+      .get(`/api/v1/products/${productId}/inventory`)
       .expect(404);
 
     expect(response.body.status).toBe('error');
@@ -124,7 +131,7 @@ describe('InventoryController Integration Tests', () => {
     );
 
     const response = await request(app)
-      .put(`/api/v1/products/${productId}/inventory`)  // Adjusted path
+      .put(`/api/v1/products/${productId}/inventory`)
       .send(mockData)
       .expect(422);
 
@@ -144,7 +151,7 @@ describe('InventoryController Integration Tests', () => {
     });
 
     const response = await request(app)
-      .patch(`/api/v1/products/${productId}/inventory`)  // Adjusted path
+      .patch(`/api/v1/products/${productId}/inventory`)
       .send(mockData)
       .expect(200);
 
@@ -166,7 +173,7 @@ describe('InventoryController Integration Tests', () => {
     });
 
     const response = await request(app)
-      .delete(`/api/v1/products/${productId}/inventory`)  // Adjusted path
+      .delete(`/api/v1/products/${productId}/inventory`)
       .expect(200);
 
     expect(response.body.status).toBe('success');
@@ -202,7 +209,7 @@ describe('InventoryController Integration Tests', () => {
     (mockInventoryService.prototype.getInventories as jest.Mock).mockResolvedValue(mockInventories);
 
     const response = await request(app)
-      .get(`/api/v1/inventories`)  // Adjusted path
+      .get(`/api/v1/inventories`)
       .expect(200);
 
     expect(response.body.status).toBe('success');
