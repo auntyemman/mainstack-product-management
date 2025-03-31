@@ -24,20 +24,64 @@ Product Store Manager is an event-driven inventory management system designed fo
 -> Comprehensive Testing: 80% Unit and integration test suites coverage that ensure application stability.
 
 ## API Design
+### Product Management Domain
 
-The following table outlines the API design for product management domain:
+The following table outlines the API design for the product management domain:
 
 | **HTTP Method** | **Endpoint**                    | **Description**                                     | **Request Body**        | **Response**            |
 |-----------------|---------------------------------|-----------------------------------------------------|-------------------------|-------------------------|
 | `POST`          | `/products/`                    | Create a new product                                | `CreateProductDTO`      | `Product`               |
 | `GET`           | `/products/:id`                 | Fetch a product by its ID                           | N/A                     | `Product`               |
-| `PATCH`         | `/products/:id`                 | Update a product's information                      | `UpdateProductDTO`      | `Product`               |
+| `PATCH`         | `/products/:id`                 | Update a product's status                           | `UpdateProductDTO`      | `Product`               |
 | `DELETE`        | `/products/:id`                 | Delete a product                                    | N/A                     | `Product`               |
 | `GET`           | `/products/`                    | Fetch all products with query parameters for filtering | `QueryParams`           | `PaginationResult`      |
 
+---
 
+### Inventory Management (Subdomain of Product Service)
 
-## and Domains
+The following table outlines the API design for inventory management, a subdomain of the product service:
+
+| **HTTP Method** | **Endpoint**                              | **Description**                                     | **Request Body**        | **Response**            |
+|-----------------|-------------------------------------------|-----------------------------------------------------|-------------------------|-------------------------|
+| `POST`          | `/products/:productId/inventory`          | Create inventory for a product                      | `CreateInventoryDTO`    | `Inventory`             |
+| `GET`           | `/products/:productId/inventory`          | Fetch inventory details for a specific product      | N/A                     | `Inventory`             |
+| `PUT`           | `/products/:productId/inventory`          | Update inventory details for a specific product     | `UpdateInventoryDTO`    | `Inventory`             |
+| `PATCH`         | `/products/:productId/inventory`          | Update inventory quantity for a specific product    | `UpdateQuantityDTO`     | `Inventory`             |
+| `DELETE`        | `/products/:productId/inventory`          | Delete inventory record for a specific product      | N/A                     | `Inventory`             |
+| `GET`           | `/inventories`                            | Fetch all inventories for products with optional filters | `QueryParams`           | `PaginationResult`      |
+
+---
+
+### User Management Domain
+
+The following table outlines the API design for the user management domain:
+
+| **HTTP Method** | **Endpoint**           | **Description**                                    | **Request Body**        | **Response**            |
+|-----------------|------------------------|----------------------------------------------------|-------------------------|-------------------------|
+| `POST`          | `/auth/signup`              | User registration/signup                          | `SignUpDTO`             | `User`                  |
+| `POST`          | `/auth/login`               | User login                                         | `LoginDTO`              | `AuthResponse`          |
+| `GET`           | `/auth/refresh`             | Refresh authentication token                       | N/A                     | `AuthResponse`          |
+| `DELETE`        | `/auth/logout`              | User logout (invalidate token)                     | N/A                     | `SuccessResponse`       |
+| `PATCH`         | `/users/:id`                 | Update user profile to make user an admin          | `MakeAdminDTO`          | `User`                  |
+| `GET`           | `/users/me`                  | Get the current user's profile                     | N/A                     | `User`                  |
+| `GET`           | `/users/:id`                 | Fetch a specific user by ID                        | N/A                     | `User`                  |
+| `PUT`           | `/users/:id`                 | Update user profile                                | `UpdateProfileDTO`      | `User`                  |
+
+---
+
+### Notification System
+
+The following table outlines the API design for the notification system:
+
+| **HTTP Method** | **Endpoint**                     | **Description**                               | **Request Body**        | **Response**            |
+|-----------------|----------------------------------|-----------------------------------------------|-------------------------|-------------------------|
+| `GET`           | `/notifications/`               | Fetch all notifications for a user           | N/A                     | `NotificationList`      |
+| `PATCH`         | `/notifications/:notificationId`| Mark a notification as read                  | N/A                     | `Notification`          |
+
+---
+
+## Domains
 - User management
 - Product Management
 - Notification System
