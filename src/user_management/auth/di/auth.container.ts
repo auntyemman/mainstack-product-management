@@ -15,11 +15,7 @@ export const authContainer = new Container();
 authContainer.bind(AUTH_TYPES.AuthService).to(AuthenticationService);
 authContainer.bind(AUTH_TYPES.AuthController).to(AuthController);
 
-// other services binding to auth service
-// authContainer.bind(USER_TYPES.UserService).to(UserService);
-// authContainer.bind(USER_TYPES.UserRepository).to(UserRepository);
-
-
+// other services binding to maintain singleton
 authContainer.bind(USER_TYPES.UserService).toDynamicValue(() => userContainer.get(USER_TYPES.UserService))
 authContainer.bind(USER_TYPES.UserRepository).toDynamicValue(() => userContainer.get(USER_TYPES.UserRepository))
 authContainer.bind(EVENT_TYPES.EmitterService).toDynamicValue(() => eventContainer.get(EVENT_TYPES.EmitterService));

@@ -10,7 +10,7 @@
     "start:prod": "node dist/server.js",
     "lint": "eslint . --ext .ts . --fix",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test": "jest --config jest.config.ts --coverage"
+    "test": "jest --config jest.config.ts --maxWorkers=50% --coverage"
   },
   "dependencies": {
     "argon2": "^0.40.1",

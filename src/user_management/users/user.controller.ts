@@ -30,7 +30,7 @@ export class UserController {
     res: Response,
     next: NextFunction,
   ): Promise<Response | unknown> {
-    const { _id } = res.locals.user.user;
+    const { _id } = res.locals.user;
     try {
       const validated = await validateRequest(UpdateDTO, req.body);
       const updatedUser = await this.userService.updateUser(_id, validated);

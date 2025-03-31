@@ -1,11 +1,11 @@
 import express, { Request, Response, NextFunction } from 'express';
 import supertest from 'supertest';
 import { authUser } from './auth';
-import { AuthenticationService } from '../../user_management/auth/auth.service';
 import { NotAuthorizedError } from '../utils/custom_error';
+import { verifyJWT } from '../utils/jwt.util';
 
 // Mock AuthenticationService.verifyJWT
-jest.mock('../../user/authentication/authentication.service');
+jest.mock('../utils/jwt.util');
 
 describe('authUser Middleware', () => {
   const app = express();
@@ -28,7 +28,7 @@ describe('authUser Middleware', () => {
 
   it('should allow access when a valid token is provided', async () => {
     const mockUser = { userId: '123', name: 'John Doe' };
-    (AuthenticationService.verifyJWT as jest.Mock).mockResolvedValue(mockUser);
+    (verifyJWT as jest.Mock).mockResolvedValue(mockUser);
 
     await supertest(app)
       .get('/protected')
@@ -39,7 +39,7 @@ describe('authUser Middleware', () => {
         expect(res.body).toEqual({ message: 'Access granted' });
       });
 
-    expect(AuthenticationService.verifyJWT).toHaveBeenCalledWith('validToken');
+    expect(verifyJWT).toHaveBeenCalledWith('validToken');
   });
 
   it('should throw NotAuthorizedError when Authorization header is missing', async () => {
@@ -53,7 +53,7 @@ describe('authUser Middleware', () => {
   });
 
   it('should throw NotAuthorizedError when token is invalid', async () => {
-    (AuthenticationService.verifyJWT as jest.Mock).mockImplementation(() => {
+    (verifyJWT as jest.Mock).mockImplementation(() => {
       throw new NotAuthorizedError();
     });
 
@@ -66,7 +66,7 @@ describe('authUser Middleware', () => {
         expect(res.body.error).toBe('Not authorized');
       });
 
-    expect(AuthenticationService.verifyJWT).toHaveBeenCalledWith('invalidToken');
+    expect(verifyJWT).toHaveBeenCalledWith('invalidToken');
   });
 
   it('should throw NotAuthorizedError when Authorization header is malformed', async () => {
