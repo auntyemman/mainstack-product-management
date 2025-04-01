@@ -4,7 +4,6 @@
 Product Store Manager is an event-driven product management system designed for handling product lifecycle processes efficiently. The application follows an event-based architecture similar to microservices, where different domains communicate through an event bus.
 
 
-
 ## Key Features & Technical Accomplishments
 
 ->  Event-Driven Architecture:
