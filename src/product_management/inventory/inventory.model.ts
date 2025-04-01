@@ -10,7 +10,7 @@ export interface IInventory extends Document {
 // Inventory Schema
 const InventorySchema = new Schema<IInventory>(
   {
-    product: { type: Schema.Types.ObjectId, ref: 'Product', required: true, unique: true },
+    product: { type: Schema.Types.ObjectId, ref: 'Product', required: true, },
     quantity: { type: Number, required: true, min: 0 },
     location: { type: String, index: true, required: true },
   },

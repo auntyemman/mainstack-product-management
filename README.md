@@ -3,6 +3,8 @@
 
 Product Store Manager is an event-driven inventory management system designed for handling product lifecycle processes efficiently. The application follows an event-based architecture similar to microservices, where different domains communicate through an event bus.
 
+
+
 ## Key Features & Technical Accomplishments
 
 ->  Event-Driven Architecture:
@@ -22,6 +24,88 @@ Product Store Manager is an event-driven inventory management system designed fo
 ->  Dockerized Deployment: Containerized application for easy deployment and scaling.
 
 -> Comprehensive Testing: 80% Unit and integration test suites coverage that ensure application stability.
+
+## Database Design
+erDiagram
+    USER ||--o{ ADDRESS : has
+    USER ||--o{ ORDER : places
+    USER ||--o{ PRODUCT : creates
+    USER ||--o{ NOTIFICATION : receives
+    
+    PRODUCT ||--o{ INVENTORY : exists_in
+    PRODUCT }o--o{ CATEGORY : belongs_to
+    
+    NOTIFICATION }o--o{ ORDER : references
+    NOTIFICATION }o--o{ PRODUCT : references
+    NOTIFICATION }o--o{ INVENTORY : references
+    
+    USER {
+        ObjectId id PK
+        string firstName
+        string lastName
+        string email UK
+        string password
+        enum role
+        date deletedAt
+        date createdAt
+        date updatedAt
+    }
+    
+    ADDRESS {
+        ObjectId id PK
+        ObjectId userId FK
+        string street
+        string city
+        string state
+        string zipCode
+        string country
+        boolean isDefault
+        enum type
+        date createdAt
+        date updatedAt
+    }
+    
+    CATEGORY {
+        ObjectId id PK
+        string name UK
+        string description
+        ObjectId parentCategory FK
+        date createdAt
+        date updatedAt
+    }
+    
+    PRODUCT {
+        ObjectId id PK
+        string name UK
+        string description
+        number basePrice
+        array categories FK
+        array tags
+        enum status
+        ObjectId createdBy FK
+        date createdAt
+        date updatedAt
+    }
+    
+    INVENTORY {
+        ObjectId id PK
+        ObjectId product FK
+        number quantity
+        string location
+        date createdAt
+        date updatedAt
+    }
+    
+    NOTIFICATION {
+        ObjectId id PK
+        ObjectId userId FK
+        string message
+        enum type
+        boolean isRead
+        ObjectId entityId
+        string entityType
+        date createdAt
+    }
 
 ## API Design
 ### Product Management Domain
@@ -76,18 +160,19 @@ The following table outlines the API design for the notification system:
 
 | **HTTP Method** | **Endpoint**                     | **Description**                               | **Request Body**        | **Response**            |
 |-----------------|----------------------------------|-----------------------------------------------|-------------------------|-------------------------|
-| `GET`           | `/notifications/`               | Fetch all notifications for a user           | N/A                     | `NotificationList`      |
+| `GET`           | `/notifications/`               | Fetch all notifications for a user           | N/A                     | `Notifications`      |
 | `PATCH`         | `/notifications/:notificationId`| Mark a notification as read                  | N/A                     | `Notification`          |
 
 ---
 
-## Domains
-- User management
-- Product Management
-- Notification System
+### Summary
+
+- **User Management**: Provides user authentication, profile management, and admin role assignment.
+- **Product Management**: Handles the creation, retrieval, updating, and deletion of products. Manages inventory records for products, allowing updates to stock quantities and creation of inventory entries.
+- **Notification System**: Notifies users about important events
 
 ## Tech Stack
-- **Backend:** Node.js, Express.js, EventEmmitter2
+- **Backend:** Node.js, Express.js, EventEmmitter2, Inversifyjs(for singleton DI)
 - **Database:** MongoDB. Query fields are indexed for query efficiency
 - **Authentication:** JSON Web Tokens (JWT), Argon2 for password hashing
 - **Validation:** Class-validator for input validation and sanitation
@@ -97,7 +182,7 @@ The following table outlines the API design for the notification system:
 
 
 ## Design Pattern
-- Services layer pattern
+- Inversion of control(IoC)
 - Repositories layer pattern
 - SOLID and DRY principles
 - Test Driven Development
