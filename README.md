@@ -107,7 +107,75 @@ erDiagram
         string entityType
         date createdAt
     }
----
+
+```mermaid
+erDiagram
+  USER ||--o{ ADDRESS : has
+  USER ||--o{ PRODUCT : creates
+  USER ||--o{ NOTIFICATION : receives
+  PRODUCT ||--o{ INVENTORY : has
+  PRODUCT }|--|| CATEGORY : categorizedAs
+
+  USER {
+    ObjectId id
+    string firstName
+    string lastName
+    string email
+    string password
+    enum role
+    date deletedAt
+    datetime createdAt
+    datetime updatedAt
+  }
+  
+  ADDRESS {
+    ObjectId id
+    ObjectId userId
+    string street
+    string city
+    string state
+    string postalCode
+    string country
+    bool isPrimary
+    datetime createdAt
+    datetime updatedAt
+  }
+  
+  PRODUCT {
+    ObjectId id
+    string name
+    string description
+    decimal price
+    enum status
+    ObjectId createdBy
+    datetime createdAt
+    datetime updatedAt
+  }
+  
+  CATEGORY {
+    ObjectId id
+    string name
+    datetime createdAt
+    datetime updatedAt
+  }
+  
+  INVENTORY {
+    ObjectId id
+    ObjectId productId
+    string location
+    int quantity
+    datetime createdAt
+    datetime updatedAt
+  }
+  
+  NOTIFICATION {
+    ObjectId id
+    ObjectId userId
+    string message
+    string type
+    bool isRead
+    datetime createdAt
+  }
 
 ## API Design
 ### Product Management Domain
