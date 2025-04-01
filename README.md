@@ -26,6 +26,7 @@ Product Store Manager is an event-driven inventory management system designed fo
 -> Comprehensive Testing: 80% Unit and integration test suites coverage that ensure application stability.
 
 ## Database Design
+```mermaid
 erDiagram
     USER ||--o{ ADDRESS : has
     USER ||--o{ ORDER : places
@@ -106,6 +107,7 @@ erDiagram
         string entityType
         date createdAt
     }
+---
 
 ## API Design
 ### Product Management Domain
