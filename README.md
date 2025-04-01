@@ -1,7 +1,7 @@
 # Mainstack Product Store Manager
 ## Overview
 
-Product Store Manager is an event-driven inventory management system designed for handling product lifecycle processes efficiently. The application follows an event-based architecture similar to microservices, where different domains communicate through an event bus.
+Product Store Manager is an event-driven product management system designed for handling product lifecycle processes efficiently. The application follows an event-based architecture similar to microservices, where different domains communicate through an event bus.
 
 
 
@@ -19,11 +19,12 @@ Product Store Manager is an event-driven inventory management system designed fo
 
 -> MongoDB as Database: NoSQL document storage for handling flexible data structures.
 
-=>  RESTful API with Express.js: Secure and well-structured API endpoints.
+->  RESTful API with Express.js: Secure and well-structured API endpoints.
 
 ->  Dockerized Deployment: Containerized application for easy deployment and scaling.
 
 -> Comprehensive Testing: 80% Unit and integration test suites coverage that ensure application stability.
+-> Logging
 
 ## Database Design
 ### Entity Relationship Diagram
