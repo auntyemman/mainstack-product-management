@@ -28,17 +28,6 @@ Product Store Manager is an event-driven inventory management system designed fo
 ## Database Design
 ```mermaid
 erDiagram
-    USER ||--o{ ADDRESS : has
-    USER ||--o{ ORDER : places
-    USER ||--o{ PRODUCT : creates
-    USER ||--o{ NOTIFICATION : receives
-    
-    PRODUCT ||--o{ INVENTORY : exists_in
-    PRODUCT }o--o{ CATEGORY : belongs_to
-    
-    NOTIFICATION }o--o{ ORDER : references
-    NOTIFICATION }o--o{ PRODUCT : references
-    NOTIFICATION }o--o{ INVENTORY : references
     
     USER {
         ObjectId id PK
@@ -107,75 +96,6 @@ erDiagram
         string entityType
         date createdAt
     }
-
-```mermaid
-erDiagram
-  USER ||--o{ ADDRESS : has
-  USER ||--o{ PRODUCT : creates
-  USER ||--o{ NOTIFICATION : receives
-  PRODUCT ||--o{ INVENTORY : has
-  PRODUCT }|--|| CATEGORY : categorizedAs
-
-  USER {
-    ObjectId id
-    string firstName
-    string lastName
-    string email
-    string password
-    enum role
-    date deletedAt
-    datetime createdAt
-    datetime updatedAt
-  }
-  
-  ADDRESS {
-    ObjectId id
-    ObjectId userId
-    string street
-    string city
-    string state
-    string postalCode
-    string country
-    bool isPrimary
-    datetime createdAt
-    datetime updatedAt
-  }
-  
-  PRODUCT {
-    ObjectId id
-    string name
-    string description
-    decimal price
-    enum status
-    ObjectId createdBy
-    datetime createdAt
-    datetime updatedAt
-  }
-  
-  CATEGORY {
-    ObjectId id
-    string name
-    datetime createdAt
-    datetime updatedAt
-  }
-  
-  INVENTORY {
-    ObjectId id
-    ObjectId productId
-    string location
-    int quantity
-    datetime createdAt
-    datetime updatedAt
-  }
-  
-  NOTIFICATION {
-    ObjectId id
-    ObjectId userId
-    string message
-    string type
-    bool isRead
-    datetime createdAt
-  }
 
 ## API Design
 ### Product Management Domain
