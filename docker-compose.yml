@@ -1,26 +1,14 @@
-version: '3.9'
-
 services:
   app:
+    container_name: mainstack_product_store
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "5500:5500"
+      - "3000:5500"
     restart: always
     environment:
       - NODE_ENV=production
       - DATABASE_URI=${DATABASE_URI}
-    depends_on:
-      - database
-
-  database:
-    image: mongo:latest
-    restart: unless-stopped
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${DATABASE_USER}
-      - MONGO_INITDB_ROOT_PASSWORD=${DATABASE_PASSWORD}
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./data/db:/data/db
+    env_file:
+      - .env

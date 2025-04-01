@@ -196,10 +196,20 @@ git clone
 4. **Run test:**
 `npm run test or yarn test`
 5. **Start the development server:**
-`npm run dev or yarn dev`
+`npm run start:dev or yarn start:dev`
+6. **Start the production server:**
+`npm run build or yarn buid`
+`npm run start:prod or yarn start:prod`
+7. **Start with docker compose:**
+`docker-compose up -d --build`
+
 
 6. **Access the application:**
 - Open a web browser and navigate to `http://localhost:5500` to access the application.
+- live link https://mainstack-vii7.onrender.com/
+
+## API Documentation & Reference
+- https://documenter.getpostman.com/view/27918376/2sAXqqdi8z
 
 ## License
 This project is licensed under the [MIT License](LICENSE).
