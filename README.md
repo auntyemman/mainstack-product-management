@@ -96,6 +96,7 @@ erDiagram
         string entityType
         date createdAt
     }
+```
 
 ## API Design
 ### Product Management Domain
